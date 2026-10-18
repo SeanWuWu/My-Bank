@@ -1784,7 +1784,8 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       selectedSpriteKey: 'coffee',
       reviewDay: 'yesterday',
       reviewIndex: 0,
-      expenses: []
+      expenses: [],
+      deletedIds: []
     };
 
     var REVIEW_CARDS = [
@@ -2000,6 +2001,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       fetch(sbConfig.url + '/rest/v1/pocket_pet_profile?on_conflict=user_key', {
         method: 'POST',
         headers: headers,
+        keepalive: true,
         body: JSON.stringify(profilePayload)
       }).then(function(res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -2021,6 +2023,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
           return fetch(sbConfig.url + '/rest/v1/pocket_pet_expenses?on_conflict=id', {
             method: 'POST',
             headers: headers,
+            keepalive: true,
             body: JSON.stringify(expRows)
           });
         }
@@ -2044,20 +2047,84 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
         'apikey': sbConfig.key,
         'Authorization': 'Bearer ' + sbConfig.key
       };
-      var queryUrl = sbConfig.url + '/rest/v1/pocket_pet_profile?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=state_json,updated_at';
-      fetch(queryUrl, { method: 'GET', headers: headers })
-        .then(function(res) {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          return res.json();
-        })
-        .then(function(rows) {
-          if (rows && rows.length > 0 && rows[0].state_json) {
-            var remoteState = rows[0].state_json;
+      var tsBust = Date.now();
+      var profileUrl = sbConfig.url + '/rest/v1/pocket_pet_profile?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=state_json,updated_at&_t=' + tsBust;
+      var expensesUrl = sbConfig.url + '/rest/v1/pocket_pet_expenses?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=*&order=id.desc&limit=200&_t=' + tsBust;
+
+      Promise.all([
+        fetch(profileUrl, { method: 'GET', headers: headers, cache: 'no-store' }).then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        }),
+        fetch(expensesUrl, { method: 'GET', headers: headers, cache: 'no-store' }).then(function(r) {
+          return r.ok ? r.json() : [];
+        }).catch(function() { return []; })
+      ])
+        .then(function(results) {
+          var rows = results[0] || [];
+          var remoteExpRows = results[1] || [];
+          var hasProfile = rows && rows.length > 0 && rows[0].state_json;
+
+          if (hasProfile || remoteExpRows.length > 0) {
+            var localExpenses = Array.isArray(state.expenses) ? state.expenses.slice() : [];
+            var localDeleted = Array.isArray(state.deletedIds) ? state.deletedIds.slice() : [];
+            var localExp = state.exp || 0;
+            var localGen = state.generation || 1;
+            var remoteState = hasProfile ? rows[0].state_json : {};
+
             for (var k in remoteState) {
               if (Object.prototype.hasOwnProperty.call(remoteState, k)) {
                 state[k] = remoteState[k];
               }
             }
+
+            var deletedMap = {};
+            localDeleted.concat(Array.isArray(remoteState.deletedIds) ? remoteState.deletedIds : []).forEach(function(did) {
+              deletedMap[String(did)] = true;
+            });
+            state.deletedIds = Object.keys(deletedMap).map(function(x) { return Number(x) || x; }).slice(-200);
+
+            var mergedMap = {};
+            function addExpItem(item) {
+              if (!item || !item.id) return;
+              if (deletedMap[String(item.id)]) return;
+              mergedMap[String(item.id)] = {
+                id: Number(item.id) || item.id,
+                catId: item.catId || item.cat_id || 'other',
+                amount: Number(item.amount) || 0,
+                note: item.note || item.cat_name || '消費',
+                date: item.date || item.expense_date || getTodayStr(0),
+                ts: item.ts || '12:00'
+              };
+            }
+
+            if (Array.isArray(remoteState.expenses)) {
+              remoteState.expenses.forEach(addExpItem);
+            }
+            localExpenses.forEach(addExpItem);
+            remoteExpRows.forEach(function(r) {
+              addExpItem({
+                id: r.id,
+                catId: r.cat_id,
+                amount: r.amount,
+                note: r.note || r.cat_name,
+                date: r.expense_date,
+                ts: r.ts
+              });
+            });
+
+            var mergedList = Object.keys(mergedMap).map(function(idKey) {
+              return mergedMap[idKey];
+            }).sort(function(a, b) {
+              return (Number(b.id) || 0) - (Number(a.id) || 0);
+            });
+
+            var prevRemoteCount = Array.isArray(remoteState.expenses) ? remoteState.expenses.length : 0;
+            state.expenses = mergedList;
+            state.generation = Math.max(localGen, Number(state.generation) || 1);
+            var minExpFromItems = (mergedList.length * 35) % 1000;
+            state.exp = Math.max(localExp, Number(state.exp) || 0, minExpFromItems);
+
             try {
               if (window.localStorage) {
                 window.localStorage.setItem('cozy_pet_v7', JSON.stringify(state));
@@ -2065,6 +2132,11 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
             } catch (e) {}
             renderAll();
             updateCloudBadgeUI('✅ 已從雲端載入最新進度 (' + new Date().toTimeString().slice(0,5) + ')', false);
+
+            if (mergedList.length !== prevRemoteCount || !hasProfile) {
+              window.pushToSupabase(false);
+            }
+
             if (manualNotice) {
               showParticle('⬇️ 已同步雲端資料！', window.innerWidth / 2 - 70, 200);
               document.getElementById('petSpeech').textContent = '☁️ 已從 Supabase 載入你最新的記帳與小窩進度！';
@@ -2437,11 +2509,14 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     window.deleteExpenseItem = function(id) {
       triggerHaptic([20]);
-      state.expenses = state.expenses.filter(function(e) { return e.id !== id; });
+      if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+      if (state.deletedIds.indexOf(id) === -1) state.deletedIds.push(id);
+      state.expenses = state.expenses.filter(function(e) { return String(e.id) !== String(id); });
       saveState();
       if (sbConfig.connected && sbConfig.url && sbConfig.key) {
         fetch(sbConfig.url + '/rest/v1/pocket_pet_expenses?id=eq.' + id, {
           method: 'DELETE',
+          keepalive: true,
           headers: { 'apikey': sbConfig.key, 'Authorization': 'Bearer ' + sbConfig.key }
         }).catch(function() {});
       }
