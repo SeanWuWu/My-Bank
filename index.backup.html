@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="記帳小窩" />
+  <link rel="icon" type="image/png" href="icon.png?v=2" />
+  <link rel="shortcut icon" type="image/png" href="icon.png?v=2" />
+  <link rel="apple-touch-icon" href="icon.png?v=2" />
+  <link rel="manifest" href="manifest.json" />
+  <meta property="og:image" content="icon.png" />
+  <title>手繪療癒記帳小窩 PocketPet v6</title>
+  <style>
+    :root {
+      color-scheme: light only;
+      --bg-outer: #D6E5DA;
+      --bg-app: #F6F3EB;
+      --bg-card: #FFFDF9;
+      --bg-soft: #F5EFE4;
+      --bg-pill: #EAE2D3;
+      --ink: #4A3E35;
+      --ink-sub: #7A6C5F;
+      --ink-muted: #9E9082;
+      --line: #655243;
+      --border: #DED4C3;
+      --primary: #EB7142;
+      --primary-dark: #CC5224;
+      --primary-light: #FFF0E8;
+      --sage: #5E9A78;
+      --sage-light: #E5F2EB;
+      --ur-color: #B86B11;
+      --ur-bg: #FEF3D1;
+      --ssr-color: #6B42DC;
+      --ssr-bg: #F1EBFF;
+      --sr-color: #2567C4;
+      --sr-bg: #E8F2FF;
+      --r-color: #556266;
+      --r-bg: #EDF1F2;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg-outer) !important;
+      color: var(--ink) !important;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Hiragino Sans CNS", "Microsoft JhengHei", sans-serif;
+      font-size: 14px;
+      line-height: 1.35;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Full Safe-Area App Shell: Dedicated Top Bar + Scrollable Body + Bottom Nav Dock (Never Overlaps!) */
+    .app-shell {
+      width: 100%;
+      max-width: 414px;
+      height: 100%;
+      max-height: 100dvh;
+      background: linear-gradient(180deg, #E2EFE6 0%, #F1F4EC 28%, var(--bg-app) 65%);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      padding-top: max(32px, calc(env(safe-area-inset-top, 0px) + 20px));
+      padding-right: max(16px, env(safe-area-inset-right, 16px));
+      padding-bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+      padding-left: max(16px, env(safe-area-inset-left, 16px));
+      box-shadow: 0 0 28px rgba(74, 62, 53, 0.08);
+    }
+
+    /* Scrollable Safe-Area Inner Viewport — Content never goes behind the Bottom Nav! */
+    .app-scroll-body {
+      flex: 1;
+      width: 100%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+
+    .app-scroll-body::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Universal Centered Button / Pill / Input Reset */
+    button, .btn-center {
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      vertical-align: middle;
+      line-height: 1.15;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--ink);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+      display: none;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+
+    
+    .pill-btn.cloud-ok {
+      background: var(--sage-light);
+      border-color: var(--sage);
+      color: #2D6846;
+    }
+    .pill-btn.cloud-off {
+      background: #FFF8E7;
+      border-color: #C99B3B;
+      color: #7D4E0D;
+    }
+    .sql-box {
+      width: 100%;
+      background: #2D2620;
+      color: #F6F3EB;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1.35;
+      max-height: 84px;
+      overflow-y: auto;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-all;
+      border: 1.5px solid var(--line);
+      user-select: text;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ink);
+      color: #FFF;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    /* Top Header Bar within Safe Area */
+    .top-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+      width: 100%;
+    }
+
+    .house-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 5px;
+      background: var(--bg-card);
+      border: 1.8px solid var(--line);
+      box-shadow: 0 2px 0 #DFD5C5;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--ink);
+      min-width: 0;
+      max-width: 44%;
+    }
+
+    .house-pill span.truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1.8px solid var(--line);
+      box-shadow: 0 2px 0 #E2D9C8;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.1;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pill-btn.warn {
+      background: #FFF4D9;
+      border-color: #C99B3B;
+      color: #7D4E0D;
+    }
+
+    .pill-btn.accent {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      color: var(--primary-dark);
+    }
+
+    /* Hand-Drawn Mini Room Stage Card */
+    .room-stage-card {
+      flex-shrink: 0;
+      background: var(--bg-card);
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      padding: 8px 10px 9px;
+      box-shadow: 0 3px 0 #DFD5C4;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .stage-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink-sub);
+      width: 100%;
+    }
+
+    .stage-meta-bar > span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .room-svg-container {
+      width: 100%;
+      border-radius: 13px;
+      overflow: hidden;
+      border: 1.6px solid #E3D8C6;
+      background: #FBF8F1;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .room-svg {
+      width: 100%;
+      height: auto;
+      max-height: 148px;
+      display: block;
+    }
+
+    .furniture-node {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .furniture-node.hidden-gear {
+      display: none;
+    }
+
+    .pet-svg-group {
+      transition: transform 0.25s ease;
+      transform-origin: 206px 140px;
+      cursor: pointer;
+    }
+
+    .pet-svg-group.chewing {
+      animation: svgPetBounce 0.48s ease-in-out 2;
+    }
+
+    @keyframes svgPetBounce {
+      0%, 100% { transform: translateY(0) scale(1); }
+      35% { transform: translateY(-6px) scale(1.06, 0.94); }
+      70% { transform: translateY(2px) scale(0.96, 1.04); }
+    }
+
+    /* Dedicated Dialogue Box below Room SVG — Never Overflows, Always Centered! */
+    .room-dialogue-box {
+      width: 100%;
+      background: var(--bg-soft);
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 5px 8px;
+      min-height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .exp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      width: 100%;
+    }
+
+    .exp-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink-sub);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .exp-track {
+      flex: 1;
+      height: 7px;
+      background: #ECE5D7;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1.2px solid #D8CBB8;
+      min-width: 50px;
+    }
+
+    .cat-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #ECE5D7;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1.2px solid #D8CBB8;
+    }
+
+    .exp-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #82BF99, #579670);
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .tab-panel.active {
+      display: flex;
+    }
+
+    .sec-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .sec-title {
+      font-size: 11.5px;
+      font-weight: 900;
+      color: var(--ink-sub);
+      line-height: 1.2;
+      min-width: 0;
+    }
+
+    /* Balanced 2x3 Hand-Drawn Capsules */
+    .capsule-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+      width: 100%;
+    }
+
+    .capsule-btn {
+      background: var(--bg-card);
+      border: 1.8px solid var(--line);
+      border-radius: 14px;
+      padding: 7px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 0 #E2D9C8;
+      min-width: 0;
+    }
+
+    .cap-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .cap-icon-svg {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--bg-soft);
+      border: 1.2px solid #E2D7C5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .cap-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .cap-name {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      line-height: 1.2;
+    }
+
+    .cap-price {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink-sub);
+      white-space: nowrap;
+      line-height: 1.15;
+    }
+
+    .zap-btn {
+      width: 25px;
+      height: 25px;
+      border-radius: 8px;
+      background: var(--primary-light);
+      border: 1.5px solid #F3C1AC;
+      color: var(--primary-dark);
+      font-size: 11.5px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* Quick 4-Column Sub-Buttons Grid (No Horizontal Clipping!) */
+    .quick-four-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
+    .quick-mini-btn {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      padding: 6px 3px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 2px;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink);
+      box-shadow: 0 2px 0 #E5DDD0;
+      min-width: 0;
+    }
+
+    .quick-mini-btn span.q-icon {
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .quick-mini-btn span.q-label {
+      font-size: 10px;
+      line-height: 1.15;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    /* Collapsible Today Summary Strip */
+    .today-strip {
+      background: var(--bg-card);
+      border: 1.8px solid var(--line);
+      border-radius: 13px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 2px 0 #E2D9C8;
+      width: 100%;
+    }
+
+    /* Standard Hand-Drawn Card */
+    .hand-card {
+      background: var(--bg-card);
+      border: 2px solid var(--line);
+      border-radius: 16px;
+      padding: 11px;
+      box-shadow: 0 3px 0 #E2D9C8;
+      width: 100%;
+    }
+
+    .list-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      width: 100%;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      gap: 7px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .list-row.off {
+      opacity: 0.5;
+      background: #F0ECE4;
+    }
+
+    .tier-tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 9.5px;
+      font-weight: 900;
+      padding: 2px 5px;
+      border-radius: 5px;
+      white-space: nowrap;
+      line-height: 1.1;
+      flex-shrink: 0;
+    }
+
+    .tier-UR { background: var(--ur-bg); color: var(--ur-color); border: 1px solid #F2C46D; }
+    .tier-SSR { background: var(--ssr-bg); color: var(--ssr-color); border: 1px solid #D2C0FF; }
+    .tier-SR { background: var(--sr-bg); color: var(--sr-color); border: 1px solid #B5D2FF; }
+    .tier-R { background: var(--r-bg); color: var(--r-color); border: 1px solid #D3DCDC; }
+
+    /* Centered Floating Safe-Area Dialog Modals */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(58, 48, 40, 0.5);
+      z-index: 100;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: max(32px, calc(env(safe-area-inset-top, 0px) + 22px)) 18px max(20px, calc(env(safe-area-inset-bottom, 0px) + 16px)) 18px;
+    }
+
+    .sheet-backdrop.open {
+      display: flex;
+    }
+
+    #priceSheetBackdrop {
+      z-index: 300;
+    }
+
+    .bottom-sheet {
+      width: 100%;
+      max-width: 364px;
+      background: var(--bg-card);
+      border: 2.2px solid var(--line);
+      border-radius: 22px;
+      padding: 15px 15px 16px;
+      box-shadow: 0 12px 32px rgba(45, 35, 28, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      max-height: 86vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sheet-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding-bottom: 5px;
+      border-bottom: 1.5px dashed var(--border);
+    }
+
+    .sheet-title {
+      font-size: 13.5px;
+      font-weight: 900;
+      color: var(--ink);
+      line-height: 1.25;
+      min-width: 0;
+      flex: 1;
+      text-align: left;
+    }
+
+    .close-btn {
+      border: 1.5px solid var(--border);
+      background: var(--bg-soft);
+      color: var(--ink-sub);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 900;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* Wrapped Grid Chips inside Dialogs (Zero Horizontal Overflow!) */
+    .dialog-chip-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
+    .sub-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 3px;
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 5px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink-sub);
+      line-height: 1.15;
+      min-width: 0;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sub-pill.active {
+      background: var(--ink);
+      color: #FFF;
+      border-color: var(--ink);
+    }
+
+    /* Segmented 2-Tab Switcher inside Modals */
+    .segmented-bar {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      background: var(--bg-pill);
+      padding: 4px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      width: 100%;
+    }
+
+    .seg-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 4px;
+      padding: 7px 6px;
+      border-radius: 9px;
+      font-size: 11.5px;
+      font-weight: 900;
+      color: var(--ink-sub);
+      background: transparent;
+      width: 100%;
+    }
+
+    .seg-btn.active {
+      background: var(--bg-card);
+      color: var(--ink);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    /* Date Selector Bar inside Record Sheet */
+    .date-picker-bar {
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .date-top-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
+    .date-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border: 1.5px solid var(--border);
+      background: #FFF;
+      color: var(--ink-sub);
+      border-radius: 8px;
+      padding: 5px 4px;
+      font-size: 11px;
+      font-weight: 800;
+      width: 100%;
+    }
+
+    .date-pill.active {
+      background: var(--sage);
+      color: #FFF;
+      border-color: var(--sage);
+    }
+
+    .date-bottom-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .date-native-input {
+      border: 1.5px solid var(--border);
+      background: #FFF;
+      color: var(--ink);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 11.5px;
+      font-weight: 800;
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      height: 32px;
+    }
+
+    .sheet-price-big {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--primary-dark);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .price-slider {
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 999px;
+      background: #E6DEC8;
+      outline: none;
+      margin: 2px 0;
+    }
+
+    .price-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid #FFF;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .step-row {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 5px;
+      width: 100%;
+    }
+
+    .step-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      padding: 6px 2px;
+      font-size: 11px;
+      font-weight: 900;
+      color: var(--ink);
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .step-btn.plus {
+      background: var(--primary-light);
+      border-color: #F3C1AC;
+      color: var(--primary-dark);
+    }
+
+    /* Symmetrical Labeled Input Grid inside Modals (100% Pixel-Centered Text!) */
+    .labeled-input-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .field-label {
+      font-size: 10.5px;
+      font-weight: 800;
+      color: var(--ink-sub);
+      text-align: center;
+      width: 100%;
+    }
+
+    .text-field, .num-field {
+      width: 100%;
+      height: 38px;
+      line-height: 38px;
+      padding: 0 8px;
+      border: 1.6px solid var(--border);
+      border-radius: 10px;
+      font-size: 12.5px;
+      font-weight: 800;
+      background: var(--bg-soft);
+      color: var(--ink);
+      min-width: 0;
+      text-align: center !important;
+      display: block;
+    }
+
+    .text-field::placeholder, .num-field::placeholder {
+      text-align: center;
+      color: var(--ink-muted);
+    }
+
+    .primary-cta {
+      width: 100%;
+      background: var(--primary);
+      color: #FFF;
+      border: 2px solid var(--line);
+      box-shadow: 0 3px 0 var(--line);
+      border-radius: 13px;
+      padding: 10px 12px;
+      font-size: 13.5px;
+      font-weight: 900;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+    }
+
+    /* Furniture Sprite Picker Grid */
+    .sprite-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+      width: 100%;
+    }
+
+    .sprite-option {
+      background: var(--bg-soft);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 6px 3px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .sprite-option span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .sprite-option.active {
+      background: var(--sage-light);
+      border-color: var(--sage);
+      color: var(--ink);
+    }
+
+    /* Species Grid */
+    .species-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .species-card {
+      background: var(--bg-soft);
+      border: 1.8px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 4px;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .species-card.active {
+      background: var(--sage-light);
+      border-color: var(--sage);
+    }
+
+    /* Dedicated Flex Bottom Navigation Dock inside Safe Area (Never covers content!) */
+    .bottom-nav {
+      flex-shrink: 0;
+      width: 100%;
+      margin-top: 6px;
+      background: #FFFDF9;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 3px 0 #DFD5C4;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 4px 6px;
+      z-index: 40;
+    }
+
+    .nav-item {
+      border: none;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 2px;
+      padding: 5px 2px;
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      border-radius: 12px;
+    }
+
+    .nav-item.active {
+      color: var(--ink);
+      background: var(--sage-light);
+    }
+
+    .floating-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      font-size: 15px;
+      font-weight: 900;
+      background: rgba(255,253,249,0.95);
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      padding: 3px 10px;
+      transition: all 0.45s ease-out;
+    }
+
+    .list-row.clickable {
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .list-row.clickable:active {
+      background: #F1ECE1;
+      transform: scale(0.99);
+    }
+
+    /* Instant Undo & Quick Edit Floating Snackbar */
+    .undo-snackbar {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
+      left: 50%;
+      transform: translateX(-50%) translateY(40px);
+      background: rgba(45, 38, 33, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #FFF;
+      padding: 7px 12px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      max-width: 92vw;
+    }
+
+    .undo-snackbar.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .undo-btn-pill {
+      background: var(--primary);
+      color: #FFF;
+      border: none;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .undo-btn-pill:active {
+      transform: scale(0.95);
+    }
+
+    .undo-btn-ghost {
+      background: rgba(255,255,255,0.18);
+      color: #FFE5D4;
+      border: none;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .undo-btn-ghost:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header inside Safe Area -->
+    <header class="top-bar">
+      <button class="house-pill" onclick="window.switchTab('house')">
+        <span id="topHouseIcon">🏠</span>
+        <span class="truncate" id="topHouseTitle">陽光小套房</span>
+      </button>
+      <div class="top-actions">
+        <button class="pill-btn cloud-off" id="cloudStatusBtn" onclick="window.openCloudSheet()">
+          <span id="cloudStatusIcon">☁️</span>
+          <span id="cloudStatusText">連後台</span>
+        </button>
+        <button class="pill-btn" onclick="window.openSpeciesSheet()">
+          <span id="currentSpeciesMini">🐹</span>
+          <span>換寵</span>
+        </button>
+        <button class="pill-btn warn" id="missedAlertBtn" onclick="window.openReviewSheet()">
+          <span>🌙</span>
+          <span>補昨帳</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Scrollable Safe-Area Body (Never overlaps with Top Bar or Bottom Nav!) -->
+    <div class="app-scroll-body">
+      <!-- 3D Isometric Hand-Drawn Diorama Room Stage -->
+      <section class="room-stage-card" id="petStageSection">
+        <div class="stage-meta-bar">
+          <span id="stageAgeBadge">🧢 青少年期 · 倉鼠丸子 (第1代)</span>
+          <span style="color:var(--sage); cursor:pointer;" onclick="window.switchTab('house')" id="activeGearCountLabel">🛋️ 房內 9 件家具 ▸</span>
+        </div>
+
+        <div class="room-svg-container" onclick="window.pokePet()">
+          <svg viewBox="0 0 400 198" class="room-svg" id="roomSvg">
+            <defs>
+              <linearGradient id="wallLeft" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#D9EAE0"/>
+                <stop offset="100%" stop-color="#C4DDD0"/>
+              </linearGradient>
+              <linearGradient id="wallRight" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#CFE3D6"/>
+                <stop offset="100%" stop-color="#B8D2C2"/>
+              </linearGradient>
+              <linearGradient id="floorWood" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#F6E2C8"/>
+                <stop offset="100%" stop-color="#E7C8A0"/>
+              </linearGradient>
+              <linearGradient id="sunbeam" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#FFFDF2" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#FFFDF2" stop-opacity="0.0"/>
+              </linearGradient>
+            </defs>
+
+            <!-- 3D Diorama Outer Wall Thickness -->
+            <polygon points="200,5 32,75 32,140 200,194 368,140 368,75" fill="#B7C9BD" stroke="#655243" stroke-width="2.4" stroke-linejoin="round"/>
+            <!-- Left & Right Interior Walls -->
+            <polygon points="200,11 40,77 40,134 200,68" fill="url(#wallLeft)" stroke="#655243" stroke-width="2.2" stroke-linejoin="round"/>
+            <polygon points="200,11 360,77 360,134 200,68" fill="url(#wallRight)" stroke="#655243" stroke-width="2.2" stroke-linejoin="round"/>
+            <!-- Wooden Baseboard Trim -->
+            <polygon points="200,63 40,129 40,134 200,68" fill="#D5B28A" stroke="#655243" stroke-width="1.4"/>
+            <polygon points="200,63 360,129 360,134 200,68" fill="#C9A57C" stroke="#655243" stroke-width="1.4"/>
+            <!-- Isometric Oak Wood Floor -->
+            <polygon points="200,68 40,134 200,189 360,134" fill="url(#floorWood)" stroke="#655243" stroke-width="2.2" stroke-linejoin="round"/>
+
+            <!-- Hand-Drawn Floor Planks -->
+            <line x1="120" y1="101" x2="280" y2="161" stroke="#D5B28A" stroke-width="1.2"/>
+            <line x1="80" y1="118" x2="240" y2="175" stroke="#D5B28A" stroke-width="1.2"/>
+            <line x1="160" y1="84" x2="320" y2="147" stroke="#D5B28A" stroke-width="1.2"/>
+            <line x1="258" y1="92" x2="98" y2="154" stroke="#D5B28A" stroke-width="1.2"/>
+
+            <!-- Sunny Isometric Window on Right Wall -->
+            <polygon points="274,46 326,69 326,104 274,81" fill="#FFFDF7" stroke="#655243" stroke-width="2.2" stroke-linejoin="round"/>
+            <polygon points="278,50 322,70 322,100 278,80" fill="#E3F4FD" stroke="#655243" stroke-width="1.5"/>
+            <line x1="300" y1="60" x2="300" y2="90" stroke="#655243" stroke-width="1.8"/>
+            <line x1="278" y1="65" x2="322" y2="85" stroke="#655243" stroke-width="1.8"/>
+            <polygon points="270,81 330,107 326,111 266,84" fill="#E5C199" stroke="#655243" stroke-width="1.6"/>
+            <polygon points="274,81 326,104 288,166 224,140" fill="url(#sunbeam)" pointer-events="none"/>
+
+            <!-- Soft Cream Woven Center Rug -->
+            <ellipse cx="206" cy="139" rx="52" ry="23" fill="#FFFDF7" stroke="#655243" stroke-width="2"/>
+            <ellipse cx="206" cy="139" rx="44" ry="17.5" fill="#FAF2E1" stroke="#E2D2B8" stroke-width="1.3" stroke-dasharray="6 4"/>
+
+            <!-- DYNAMIC FURNITURE LAYER -->
+            <g id="dynamicFurnitureLayer"></g>
+
+            <!-- HAND-DRAWN UNIFIED PET LAYER -->
+            <g id="handDrawnPetLayer" class="pet-svg-group"></g>
+          </svg>
+        </div>
+
+        <!-- Centered Non-Overflowing Dialogue Box -->
+        <div class="room-dialogue-box" id="petSpeech">
+          🌿 點房內家具可查看加成 · 點下方膠囊 1 秒記帳！
+        </div>
+
+        <div class="exp-row">
+          <span class="exp-label" id="nextHouseHint">下一階：🔑 一房一廳</span>
+          <div class="exp-track">
+            <div class="exp-fill" id="expFill" style="width: 32%;"></div>
+          </div>
+          <span class="exp-label" id="expText">320/1000</span>
+        </div>
+      </section>
+
+      <!-- TAB 1: Fast Record -->
+      <main class="tab-panel active" id="tab-record">
+        <div>
+          <div class="sec-head">
+            <span class="sec-title">日常快按（點卡片微調/補記 · 點 ⚡ 秒記）</span>
+            <button class="pill-btn accent" onclick="window.openCategoryEditSheet('NEW')">
+              <span>＋ 新增項目</span>
+            </button>
+          </div>
+          <div class="capsule-grid" id="capsuleGrid"></div>
+        </div>
+
+        <!-- 4-Column Centered Quick Grid (No Right-Edge Clipping!) -->
+        <div class="quick-four-grid">
+          <button class="quick-mini-btn" onclick="window.openBackdateSheet()">
+            <span class="q-icon">📅</span>
+            <span class="q-label">補記過往</span>
+          </button>
+          <button class="quick-mini-btn" onclick="window.openPriceSheetForTemp('🍰', '下午茶', 150)">
+            <span class="q-icon">🍰</span>
+            <span class="q-label">下午茶</span>
+          </button>
+          <button class="quick-mini-btn" onclick="window.openPriceSheetForTemp('🏪', '超商零食', 70)">
+            <span class="q-icon">🏪</span>
+            <span class="q-label">超商零食</span>
+          </button>
+          <button class="quick-mini-btn" onclick="window.openPriceSheetForTemp('🚕', '計程車', 180)">
+            <span class="q-icon">🚕</span>
+            <span class="q-label">計程車</span>
+          </button>
+        </div>
+
+        <div class="today-strip" onclick="window.openTodayDetailSheet()">
+          <div style="display:flex; align-items:center; gap:6px; font-weight:800; font-size:12px; min-width:0;">
+            <span>📒 今日明細</span>
+            <span style="font-size:11px; color:var(--ink-muted);" id="todayCountBadge">(0 筆)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; font-weight:900; font-size:12.5px; color:var(--primary-dark); flex-shrink:0;">
+            <button class="pill-btn accent" id="editLastExpenseBtn" style="display:none; padding:3px 8px; font-size:10px;" onclick="window.editLatestExpense(event)">✏️ 改上筆</button>
+            <span id="todayTotalText">$0</span>
+            <span style="font-size:10.5px; color:var(--ink-muted);">點改/展開 ▾</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- TAB 2: Real Estate & Dynamic Room Furniture Equipment -->
+      <main class="tab-panel" id="tab-house">
+        <div class="hand-card">
+          <div class="sec-head">
+            <span class="sec-title" id="estateSectionTitle">🏡 世代房產進度（同物種繁衍）</span>
+            <button class="pill-btn" onclick="window.advancePetStage()">✨ 體驗長大</button>
+          </div>
+          <div class="list-stack" id="estateTimeline"></div>
+        </div>
+
+        <div class="hand-card">
+          <div class="sec-head">
+            <span class="sec-title">🛋️ 每月固定扣繳家具</span>
+            <button class="pill-btn accent" onclick="window.openEquipModal(null)">＋ 新增家具</button>
+          </div>
+          <div style="font-size:11px; color:var(--ink-sub); margin-bottom:8px; line-height:1.35;">
+            點左側按鈕可<strong>立即從上方房間收起或擺回家具</strong>；點項目可修改金額：
+          </div>
+          <div class="list-stack" id="equipList"></div>
+        </div>
+      </main>
+
+      <!-- TAB 3: Full-Screen Weekly/Monthly Stats & Date-Range History Lookup -->
+      <main class="tab-panel" id="tab-stats">
+        <div class="segmented-bar">
+          <button class="seg-btn active" id="statBtnMonth" onclick="window.setStatsPeriod('month')">📅 本月統整 (比上月)</button>
+          <button class="seg-btn" id="statBtnWeek" onclick="window.setStatsPeriod('week')">📆 本週統整 (比上週)</button>
+        </div>
+
+        <div class="hand-card" style="background: linear-gradient(135deg, #4A3E35 0%, #635347 100%); color:#FFF;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#E6DEC8; margin-bottom:4px; gap:6px;">
+            <span id="statPeriodTitle">本月日常變動消費</span>
+            <span id="statFixedNote" style="color:#FDE08D; font-weight:800;">月固定 $53,536</span>
+          </div>
+          <div style="font-size:25px; font-weight:900; margin-bottom:5px;" id="statTotalAmount">$0</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+            <span style="font-size:10.5px; background:rgba(255,255,255,0.15); padding:4px 9px; border-radius:999px; font-weight:800;" id="statDiffPill">計算中...</span>
+            <span style="font-size:10.5px; color:#E6DEC8;" id="statGrandTotalText">含月固定總計：$0</span>
+          </div>
+        </div>
+
+        <div class="hand-card">
+          <div class="sec-head">
+            <span class="sec-title">📊 日常各分類花費佔比</span>
+            <span class="sec-title" id="statCountLabel">0 筆</span>
+          </div>
+          <div id="catBarList" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <div class="hand-card">
+          <div class="sec-head">
+            <span class="sec-title">🏆 前三大單筆日常消費排行 (點項目可改金額)</span>
+          </div>
+          <div class="list-stack" id="top3List"></div>
+        </div>
+
+        <div class="hand-card">
+          <div class="sec-head">
+            <span class="sec-title">🔍 歷史消費明細查詢 (點任一筆可修改)</span>
+            <span style="font-size:11px; font-weight:900; color:var(--primary-dark);" id="historyFilteredSum">共 $0</span>
+          </div>
+
+          <div style="background:var(--bg-soft); padding:9px; border-radius:12px; border:1.5px solid var(--border); margin-bottom:9px; display:flex; flex-direction:column; gap:7px;">
+            <div style="display:flex; align-items:center; gap:5px; font-size:11px; font-weight:800;">
+              <span style="flex-shrink:0;">區間：</span>
+              <input type="date" class="date-native-input" id="filterStartDate" onchange="window.renderHistoryLookup()" />
+              <span>～</span>
+              <input type="date" class="date-native-input" id="filterEndDate" onchange="window.renderHistoryLookup()" />
+            </div>
+            <div class="dialog-chip-grid">
+              <button class="sub-pill active" id="qrange-all" onclick="window.setQuickDateRange('all')">全部日期</button>
+              <button class="sub-pill" id="qrange-7d" onclick="window.setQuickDateRange('7d')">近 7 天</button>
+              <button class="sub-pill" id="qrange-month" onclick="window.setQuickDateRange('month')">近 30 天</button>
+            </div>
+            <div class="dialog-chip-grid" id="historyCatFilterRow"></div>
+          </div>
+
+          <div id="historyTimelineList"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Dedicated Bottom Navigation Dock inside Safe Area -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-record" onclick="window.switchTab('record')">
+        <span style="font-size:15px; line-height:1;">🌿</span>
+        <span>小窩記帳</span>
+      </button>
+      <button class="nav-item" id="nav-house" onclick="window.switchTab('house')">
+        <span style="font-size:15px; line-height:1;">🏡</span>
+        <span>房產與家具</span>
+      </button>
+      <button class="nav-item" id="nav-stats" onclick="window.switchTab('stats')">
+        <span style="font-size:15px; line-height:1;">📊</span>
+        <span>統整與查詢</span>
+      </button>
+    </nav>
+
+    <!-- DIALOG 0: Choose Pet Species (Centered Floating Safe-Area Card) -->
+    <div class="sheet-backdrop" id="speciesSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'speciesSheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title">🐾 選擇手繪寵物夥伴（同畫風）</div>
+          <button class="close-btn" onclick="window.closeSheet('speciesSheetBackdrop')">✕</button>
+        </div>
+        <div style="font-size:11px; color:var(--ink-sub); text-align:center;">
+          暖棕手繪墨線＋粉彩水彩風格，維持同物種成婚繁衍：
+        </div>
+        <div class="species-grid" id="speciesGrid"></div>
+      </div>
+    </div>
+
+    <!-- DIALOG 1: Price Adjuster + Past Date Selector + Edit Recorded Expense -->
+    <div class="sheet-backdrop" id="priceSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'priceSheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title" id="sheetCatTitle">🍱 午餐</div>
+          <button class="pill-btn" id="sheetPinDefaultBtn" style="padding:4px 9px; font-size:10.5px;" onclick="window.pinCurrentAsDefault()">📌 設為預設</button>
+          <button class="close-btn" onclick="window.closeSheet('priceSheetBackdrop')">✕</button>
+        </div>
+
+        <!-- Clean 2-Row Date Picker Bar -->
+        <div class="date-picker-bar">
+          <div class="date-top-row">
+            <button class="date-pill active" id="dp-today" onclick="window.setExpenseDateOffset(0, 'today')">📅 今天</button>
+            <button class="date-pill" id="dp-yesterday" onclick="window.setExpenseDateOffset(-1, 'yesterday')">昨天</button>
+            <button class="date-pill" id="dp-2days" onclick="window.setExpenseDateOffset(-2, '2days')">前天</button>
+          </div>
+          <div class="date-bottom-row">
+            <span style="font-size:11px; font-weight:800; color:var(--ink-sub); flex-shrink:0;">指定記帳日期：</span>
+            <input type="date" class="date-native-input" id="sheetDateInput" onchange="window.onCustomDatePick(this.value)" />
+          </div>
+        </div>
+
+        <!-- 3-Column Wrapped Category Grid -->
+        <div class="dialog-chip-grid" id="sheetCatSwitchRow"></div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="font-size:11.5px; color:var(--ink-sub); font-weight:800;">快滑/按鈕或點金額直接改：</span>
+          <div style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="window.focusExactAmount()" title="點擊直接輸入金額">
+            <div class="sheet-price-big" id="sheetAmountDisplay">$120</div>
+            <span class="close-btn" style="width:24px; height:24px; font-size:12px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);">✎</span>
+          </div>
+        </div>
+
+        <div class="dialog-chip-grid" id="sheetPresetChips"></div>
+
+        <input type="range" min="0" max="2000" step="10" value="120" class="price-slider" id="sheetSlider" oninput="window.onSliderChange(this.value)" />
+
+        <div class="step-row">
+          <button class="step-btn" onclick="window.adjustAmount(-100)">-100</button>
+          <button class="step-btn" onclick="window.adjustAmount(-50)">-50</button>
+          <button class="step-btn" onclick="window.adjustAmount(-10)">-10</button>
+          <button class="step-btn plus" onclick="window.adjustAmount(10)">+10</button>
+          <button class="step-btn plus" onclick="window.adjustAmount(50)">+50</button>
+          <button class="step-btn plus" onclick="window.adjustAmount(100)">+100</button>
+        </div>
+
+        <!-- Symmetrical Labeled Inputs with type="text" inputmode="numeric" for Perfect Centering -->
+        <div class="labeled-input-grid" style="grid-template-columns: 1.15fr 1.25fr;">
+          <div class="field-group">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+              <span class="field-label" style="width:auto;">自訂精準金額</span>
+              <button style="font-size:10px; font-weight:900; color:var(--primary-dark); background:var(--primary-light); border:1px solid #F3C1AC; border-radius:5px; padding:1px 6px;" onclick="window.clearExactAmount()">⌫ 歸零</button>
+            </div>
+            <input type="text" inputmode="numeric" class="num-field" id="sheetExactInput" placeholder="直接輸入金額" oninput="window.onExactInput(this.value)" />
+          </div>
+          <div class="field-group">
+            <span class="field-label">消費備註 (選填)</span>
+            <input type="text" class="text-field" id="sheetNoteInput" placeholder="如: 便當、聚餐" />
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; width:100%;">
+          <button class="primary-cta" style="flex:1;" onclick="window.confirmSheetExpense(event)">
+            <span id="sheetCtaLabel">🍖 確認餵食記帳</span>
+            <span id="sheetCtaPrice">$120</span>
+          </button>
+          <button class="step-btn" id="sheetDeleteExpenseBtn" style="display:none; width:auto; padding:0 14px; color:#C0392B; border-color:#E6B0AA; background:#FDEDEC; flex-shrink:0;" onclick="window.deleteEditingExpense()">🗑️ 刪除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIALOG 2: Today's Details Drawer -->
+    <div class="sheet-backdrop" id="todaySheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'todaySheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title">📒 今日已餵食明細</div>
+          <button class="close-btn" onclick="window.closeSheet('todaySheetBackdrop')">✕</button>
+        </div>
+        <div class="list-stack" id="todaySheetList"></div>
+      </div>
+    </div>
+
+    <!-- DIALOG 3: Add / Edit Fast-Record Item (100% Centered Typography & Inputs!) -->
+    <div class="sheet-backdrop" id="catEditSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'catEditSheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title">⚙️ 新增項目或修改預設價</div>
+          <button class="close-btn" onclick="window.closeSheet('catEditSheetBackdrop')">✕</button>
+        </div>
+
+        <!-- Centered 2-Tab Mode Switch -->
+        <div class="segmented-bar">
+          <button class="seg-btn active" id="catModeNewBtn" onclick="window.loadCatIntoEditInputs('NEW')">＋ 新增快按項目</button>
+          <button class="seg-btn" id="catModeEditBtn" onclick="window.loadCatIntoEditInputs(window.getFirstCatId())">✎ 修改現有項目</button>
+        </div>
+
+        <div id="catEditSubHint" style="font-size:11px; color:var(--ink-sub); text-align:center; font-weight:800;">
+          點選常用範本自動帶入，或於下方輸入：
+        </div>
+
+        <!-- 3x2 Centered Grid of Quick Templates OR Existing Categories -->
+        <div class="dialog-chip-grid" id="editCatSelectChips"></div>
+
+        <!-- Symmetrical Labeled Inputs with 100% Dead-Center Alignment -->
+        <div class="labeled-input-grid">
+          <div class="field-group">
+            <span class="field-label">項目圖示＋名稱</span>
+            <input type="text" class="text-field" id="catEditName" placeholder="🍰 下午茶" />
+          </div>
+          <div class="field-group">
+            <span class="field-label">預設金額 ($)</span>
+            <input type="text" inputmode="numeric" class="num-field" id="catEditPrice" placeholder="150" />
+          </div>
+        </div>
+
+        <button class="primary-cta" id="catSaveBtnLabel" onclick="window.saveCategoryFromSheet()">💾 確認新增項目</button>
+      </div>
+    </div>
+
+    <!-- DIALOG 4: Fixed Expense & Room Furniture Picker (100% Centered Inputs!) -->
+    <div class="sheet-backdrop" id="equipSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'equipSheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title" id="equipModalTitle">🛋️ 新增月固定開銷與家具</div>
+          <button class="close-btn" onclick="window.closeSheet('equipSheetBackdrop')">✕</button>
+        </div>
+        <div style="font-size:11px; color:var(--ink-sub); text-align:center;" id="equipTierPreview"></div>
+        <div class="labeled-input-grid">
+          <div class="field-group">
+            <span class="field-label">每月固定開銷名稱</span>
+            <input type="text" class="text-field" id="equipExpenseName" placeholder="如: 水電瓦斯" />
+          </div>
+          <div class="field-group">
+            <span class="field-label">每月金額 ($)</span>
+            <input type="text" inputmode="numeric" class="num-field" id="equipExpensePrice" placeholder="1200" oninput="window.previewEquipTier(this.value)" />
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">對應擺進房間的家具名稱</span>
+          <input type="text" class="text-field" id="equipGearName" placeholder="義式濃縮咖啡機" />
+        </div>
+        <div style="font-size:11px; font-weight:800; color:var(--ink-sub); text-align:center;">🎨 點選要擺進小房間的手繪家具造型：</div>
+        <div class="sprite-picker-grid" id="spritePickerGrid"></div>
+        <div style="display:flex; gap:8px; width:100%;">
+          <button class="primary-cta" style="flex:2;" onclick="window.saveEquipFromModal()">💾 儲存並擺進房間</button>
+          <button class="step-btn" id="equipDeleteBtn" style="flex:1; color:#C0392B;" onclick="window.deleteEquipFromModal()">刪除</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- DIALOG 6: Supabase Cloud Sync Setup & 3-Step Guide (100% Centered & Safe Area) -->
+    <div class="sheet-backdrop" id="cloudSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'cloudSheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title">☁️ 串接 Supabase 雲端後台</div>
+          <button class="close-btn" onclick="window.closeSheet('cloudSheetBackdrop')">✕</button>
+        </div>
+
+        <div id="cloudConnectionBanner" style="background:var(--bg-soft); border:1.5px solid var(--border); border-radius:11px; padding:6px 9px; font-size:10.5px; font-weight:800; color:var(--ink-sub); text-align:center;">
+          目前狀態：尚未連線（設定後記帳即自動 0 秒雙向同步）
+        </div>
+
+        <!-- Step 1: Copy SQL -->
+        <div style="background:var(--bg-soft); border:1.5px solid var(--border); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:5px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <span class="step-badge">步驟 1：建立雲端資料表</span>
+            <button class="pill-btn accent" style="padding:3px 9px; font-size:10px;" onclick="window.copySupabaseSql()">📋 一鍵複製 SQL</button>
+          </div>
+          <div style="font-size:10px; color:var(--ink-sub); text-align:center; line-height:1.3;">
+            於 Supabase 左側點 <strong>SQL Editor</strong> ➔ 貼上語法並點 <strong>Run</strong>：
+          </div>
+          <pre class="sql-box" id="supabaseSqlCode">create table if not exists public.pocket_pet_profile (
+  user_key text primary key,
+  state_json jsonb not null,
+  updated_at timestamptz default now()
+);
+create table if not exists public.pocket_pet_expenses (
+  id bigint primary key,
+  user_key text default 'my_ledger',
+  expense_date text,
+  cat_id text,
+  cat_name text,
+  note text,
+  amount int,
+  ts text,
+  updated_at timestamptz default now()
+);
+alter table public.pocket_pet_profile disable row level security;
+alter table public.pocket_pet_expenses disable row level security;</pre>
+        </div>
+
+        <!-- Step 2: Paste URL & Key -->
+        <div style="background:var(--bg-soft); border:1.5px solid var(--border); border-radius:12px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="step-badge">步驟 2：貼上網址與金鑰</span>
+            <span style="font-size:10px; color:var(--ink-sub); font-weight:800;">Project Settings ➔ API</span>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Project URL (專案網址)</span>
+            <input type="text" class="text-field" style="background:#FFF; font-size:11.5px; height:34px; line-height:34px;" id="sbUrlInput" placeholder="https://xxxx.supabase.co" />
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">anon public Key (公開金鑰)</span>
+            <input type="text" class="text-field" style="background:#FFF; font-size:11.5px; height:34px; line-height:34px;" id="sbKeyInput" placeholder="貼上 eyJ... 或 sb_publishable_..." />
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">專屬同步代號 (手機與電腦填相同代號即可互連)</span>
+            <input type="text" class="text-field" style="background:#FFF; font-size:11.5px; height:34px; line-height:34px;" id="sbUserKeyInput" value="my_ledger" placeholder="my_ledger" />
+          </div>
+        </div>
+
+        <button class="primary-cta" style="padding:9px 12px;" onclick="window.saveAndConnectSupabase()">
+          <span>🚀 儲存並立即連線同步</span>
+        </button>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%;">
+          <button class="step-btn" style="padding:6px 4px; font-size:11px;" onclick="window.pullFromSupabase(true)">⬇️ 從雲端載入</button>
+          <button class="step-btn plus" style="padding:6px 4px; font-size:11px;" onclick="window.pushToSupabase(true)">⬆️ 備份至雲端</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIALOG 5: 30-Second Review -->
+    <div class="sheet-backdrop" id="reviewSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'reviewSheetBackdrop')">
+      <div class="bottom-sheet">
+        <div class="sheet-head">
+          <div class="sheet-title">⏰ 30秒滑卡補記回顧</div>
+          <button class="close-btn" onclick="window.closeSheet('reviewSheetBackdrop')">✕</button>
+        </div>
+        <div class="segmented-bar">
+          <button class="seg-btn active" id="revModeYesterday" onclick="window.setReviewSimMode('yesterday')">🌙 補記昨天</button>
+          <button class="seg-btn" id="revModeToday" onclick="window.setReviewSimMode('today')">☀️ 回顧今天</button>
+        </div>
+        <div id="reviewDeckBox" style="background:var(--bg-soft); border:1.8px solid var(--border); border-radius:16px; padding:14px 12px; text-align:center; display:flex; flex-direction:column; gap:10px; align-items:center; width:100%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    var PET_SPECIES = [
+      {
+        id: 'hamster', emoji: '🐹', name: '倉鼠丸子', unit: '鼠',
+        renderSvg: function(x, y, scale) {
+          scale = scale || 1;
+          return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+            '<ellipse cx="0" cy="24" rx="22" ry="7" fill="rgba(101,82,67,0.14)"/>' +
+            '<ellipse cx="-12" cy="-16" rx="7" ry="7" fill="#F3B982" stroke="#655243" stroke-width="2"/>' +
+            '<ellipse cx="-12" cy="-16" rx="4" ry="4" fill="#F8CBB8"/>' +
+            '<ellipse cx="12" cy="-16" rx="7" ry="7" fill="#F3B982" stroke="#655243" stroke-width="2"/>' +
+            '<ellipse cx="12" cy="-16" rx="4" ry="4" fill="#F8CBB8"/>' +
+            '<path d="M-19,6 C-21,-14 -13,-20 0,-20 C13,-20 21,-14 19,6 C21,18 14,23 0,23 C-14,23 -21,18 -19,6 Z" fill="#F6C896" stroke="#655243" stroke-width="2.2"/>' +
+            '<ellipse cx="0" cy="9" rx="12" ry="11" fill="#FFFDF8"/>' +
+            '<ellipse cx="-10" cy="0" rx="4" ry="2.6" fill="#F4978E" opacity="0.78"/>' +
+            '<ellipse cx="10" cy="0" rx="4" ry="2.6" fill="#F4978E" opacity="0.78"/>' +
+            '<circle cx="-6.5" cy="-5" r="2.4" fill="#4A3E35"/>' +
+            '<circle cx="-7.2" cy="-5.8" r="0.8" fill="#FFF"/>' +
+            '<circle cx="6.5" cy="-5" r="2.4" fill="#4A3E35"/>' +
+            '<circle cx="5.8" cy="-5.8" r="0.8" fill="#FFF"/>' +
+            '<path d="M-2.5,-1 Q0,2 2.5,-1" fill="none" stroke="#655243" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<ellipse cx="0" cy="9" rx="3.2" ry="4.5" fill="#7F6756" stroke="#655243" stroke-width="1.4"/>' +
+            '<ellipse cx="-5" cy="9" rx="3.2" ry="2.4" fill="#FFE5B4" stroke="#655243" stroke-width="1.6"/>' +
+            '<ellipse cx="5" cy="9" rx="3.2" ry="2.4" fill="#FFE5B4" stroke="#655243" stroke-width="1.6"/>' +
+            '<ellipse cx="-9" cy="22" rx="4.5" ry="2.5" fill="#FFE5B4" stroke="#655243" stroke-width="1.6"/>' +
+            '<ellipse cx="9" cy="22" rx="4.5" ry="2.5" fill="#FFE5B4" stroke="#655243" stroke-width="1.6"/>' +
+          '</g>';
+        }
+      },
+      {
+        id: 'shiba', emoji: '🐕', name: '柴犬旺財', unit: '柴',
+        renderSvg: function(x, y, scale) {
+          scale = scale || 1;
+          return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+            '<ellipse cx="0" cy="24" rx="22" ry="7" fill="rgba(101,82,67,0.14)"/>' +
+            '<path d="M14,12 Q26,4 22,-5 Q18,-9 13,4" fill="#E89E58" stroke="#655243" stroke-width="2"/>' +
+            '<polygon points="-17,-9 -13,-25 -3,-15" fill="#E89E58" stroke="#655243" stroke-width="2" stroke-linejoin="round"/>' +
+            '<polygon points="17,-9 13,-25 3,-15" fill="#E89E58" stroke="#655243" stroke-width="2" stroke-linejoin="round"/>' +
+            '<ellipse cx="0" cy="3" rx="19" ry="18" fill="#F2AE66" stroke="#655243" stroke-width="2.2"/>' +
+            '<path d="M-14,4 Q-9,-3 0,2 Q9,-3 14,4 Q12,19 0,20 Q-12,19 -14,4 Z" fill="#FFFDF8"/>' +
+            '<circle cx="-5.5" cy="-7" r="2" fill="#FFFDF8"/>' +
+            '<circle cx="5.5" cy="-7" r="2" fill="#FFFDF8"/>' +
+            '<circle cx="-6.5" cy="-3" r="2.4" fill="#4A3E35"/>' +
+            '<circle cx="6.5" cy="-3" r="2.4" fill="#4A3E35"/>' +
+            '<ellipse cx="0" cy="1" rx="2.8" ry="2" fill="#4A3E35"/>' +
+            '<path d="M-3.5,4 Q0,7 3.5,4" fill="none" stroke="#655243" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<ellipse cx="-10" cy="2" rx="3.5" ry="2" fill="#F4978E" opacity="0.7"/>' +
+            '<ellipse cx="10" cy="2" rx="3.5" ry="2" fill="#F4978E" opacity="0.7"/>' +
+            '<ellipse cx="-7" cy="21" rx="4" ry="2.5" fill="#FFFDF8" stroke="#655243" stroke-width="1.6"/>' +
+            '<ellipse cx="7" cy="21" rx="4" ry="2.5" fill="#FFFDF8" stroke="#655243" stroke-width="1.6"/>' +
+          '</g>';
+        }
+      },
+      {
+        id: 'cat', emoji: '🐱', name: '橘貓胖橘', unit: '喵',
+        renderSvg: function(x, y, scale) {
+          scale = scale || 1;
+          return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+            '<ellipse cx="0" cy="24" rx="22" ry="7" fill="rgba(101,82,67,0.14)"/>' +
+            '<path d="M16,14 Q28,10 25,-2" fill="none" stroke="#F4A261" stroke-width="4.5" stroke-linecap="round"/>' +
+            '<path d="M16,14 Q28,10 25,-2" fill="none" stroke="#655243" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<polygon points="-16,-7 -15,-24 -3,-15" fill="#F7B267" stroke="#655243" stroke-width="2" stroke-linejoin="round"/>' +
+            '<polygon points="16,-7 15,-24 3,-15" fill="#F7B267" stroke="#655243" stroke-width="2" stroke-linejoin="round"/>' +
+            '<ellipse cx="0" cy="3" rx="19" ry="17" fill="#F9C784" stroke="#655243" stroke-width="2.2"/>' +
+            '<line x1="0" y1="-14" x2="0" y2="-8" stroke="#E07A5F" stroke-width="2" stroke-linecap="round"/>' +
+            '<line x1="-4" y1="-13" x2="-4" y2="-9" stroke="#E07A5F" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<line x1="4" y1="-13" x2="4" y2="-9" stroke="#E07A5F" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<ellipse cx="0" cy="11" rx="11" ry="8.5" fill="#FFFDF8"/>' +
+            '<circle cx="-6.5" cy="-2" r="2.4" fill="#4A3E35"/>' +
+            '<circle cx="6.5" cy="-2" r="2.4" fill="#4A3E35"/>' +
+            '<path d="M-3.5,2 Q-1.8,5 0,2 Q1.8,5 3.5,2" fill="none" stroke="#655243" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<ellipse cx="-10" cy="2" rx="3.6" ry="2.2" fill="#F4978E" opacity="0.72"/>' +
+            '<ellipse cx="10" cy="2" rx="3.6" ry="2.2" fill="#F4978E" opacity="0.72"/>' +
+          '</g>';
+        }
+      },
+      {
+        id: 'dino', emoji: '🦖', name: '恐龍咔滋', unit: '龍',
+        renderSvg: function(x, y, scale) {
+          scale = scale || 1;
+          return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+            '<ellipse cx="0" cy="24" rx="22" ry="7" fill="rgba(101,82,67,0.14)"/>' +
+            '<polygon points="0,-24 -4,-16 4,-16" fill="#F4A261" stroke="#655243" stroke-width="1.8"/>' +
+            '<polygon points="9,-20 4,-13 13,-12" fill="#F4A261" stroke="#655243" stroke-width="1.8"/>' +
+            '<path d="M-16,15 Q20,21 24,8 Q16,2 12,6" fill="#88C999" stroke="#655243" stroke-width="2"/>' +
+            '<ellipse cx="0" cy="3" rx="18" ry="18" fill="#95D5B2" stroke="#655243" stroke-width="2.2"/>' +
+            '<ellipse cx="-1" cy="9" rx="11" ry="9" fill="#FFF3B0" stroke="#655243" stroke-width="1.5"/>' +
+            '<circle cx="-6.5" cy="-4" r="2.4" fill="#4A3E35"/>' +
+            '<circle cx="5.5" cy="-4" r="2.4" fill="#4A3E35"/>' +
+            '<ellipse cx="-10" cy="1" rx="3.5" ry="2" fill="#F4978E" opacity="0.75"/>' +
+            '<ellipse cx="9" cy="1" rx="3.5" ry="2" fill="#F4978E" opacity="0.75"/>' +
+            '<path d="M-3.5,0 Q0,3 3.5,0" fill="none" stroke="#655243" stroke-width="1.8" stroke-linecap="round"/>' +
+          '</g>';
+        }
+      },
+      {
+        id: 'frog', emoji: '🐸', name: '青蛙呱呱', unit: '蛙',
+        renderSvg: function(x, y, scale) {
+          scale = scale || 1;
+          return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+            '<ellipse cx="0" cy="24" rx="22" ry="7" fill="rgba(101,82,67,0.14)"/>' +
+            '<circle cx="-10" cy="-13" r="7.5" fill="#A3D9A5" stroke="#655243" stroke-width="2"/>' +
+            '<circle cx="10" cy="-13" r="7.5" fill="#A3D9A5" stroke="#655243" stroke-width="2"/>' +
+            '<ellipse cx="0" cy="4" rx="20" ry="16" fill="#A3D9A5" stroke="#655243" stroke-width="2.2"/>' +
+            '<ellipse cx="0" cy="10" rx="13" ry="8.5" fill="#FFFDF6"/>' +
+            '<circle cx="-10" cy="-13" r="3" fill="#4A3E35"/>' +
+            '<circle cx="-11" cy="-14" r="0.9" fill="#FFF"/>' +
+            '<circle cx="10" cy="-13" r="3" fill="#4A3E35"/>' +
+            '<circle cx="9" cy="-14" r="0.9" fill="#FFF"/>' +
+            '<path d="M-5,1 Q0,4.5 5,1" fill="none" stroke="#655243" stroke-width="1.8" stroke-linecap="round"/>' +
+            '<ellipse cx="-11" cy="2" rx="3.6" ry="2.2" fill="#F4978E" opacity="0.75"/>' +
+            '<ellipse cx="11" cy="2" rx="3.6" ry="2.2" fill="#F4978E" opacity="0.75"/>' +
+          '</g>';
+        }
+      },
+      {
+        id: 'hippo', emoji: '🦛', name: '河馬嘟嘟', unit: '河馬',
+        renderSvg: function(x, y, scale) {
+          scale = scale || 1;
+          return '<g transform="translate(' + x + ',' + y + ') scale(' + scale + ')">' +
+            '<ellipse cx="0" cy="24" rx="22" ry="7" fill="rgba(101,82,67,0.14)"/>' +
+            '<circle cx="-13" cy="-15" r="5" fill="#B8B8D1" stroke="#655243" stroke-width="2"/>' +
+            '<circle cx="13" cy="-15" r="5" fill="#B8B8D1" stroke="#655243" stroke-width="2"/>' +
+            '<ellipse cx="0" cy="2" rx="18.5" ry="18" fill="#C5C3D8" stroke="#655243" stroke-width="2.2"/>' +
+            '<ellipse cx="0" cy="6" rx="14.5" ry="10" fill="#E2D9F3" stroke="#655243" stroke-width="1.8"/>' +
+            '<circle cx="-4.5" cy="4" r="1.6" fill="#655243"/>' +
+            '<circle cx="4.5" cy="4" r="1.6" fill="#655243"/>' +
+            '<circle cx="-6.5" cy="-5" r="2.3" fill="#4A3E35"/>' +
+            '<circle cx="6.5" cy="-5" r="2.3" fill="#4A3E35"/>' +
+            '<ellipse cx="-11" cy="6" rx="3.2" ry="1.8" fill="#F4978E" opacity="0.7"/>' +
+            '<ellipse cx="11" cy="6" rx="3.2" ry="1.8" fill="#F4978E" opacity="0.7"/>' +
+          '</g>';
+        }
+      }
+    ];
+
+    var FURNITURE_SPRITES = {
+      vault: {
+        label: '🛡️ 黃金金庫',
+        defaultPos: { x: 198, y: 66 },
+        svg: '<g><ellipse cx="0" cy="20" rx="22" ry="8" fill="rgba(101,82,67,0.14)"/><polygon points="0,-24 -22,-13 0,-2 22,-13" fill="#FFF3B0" stroke="#655243" stroke-width="2" stroke-linejoin="round"/><polygon points="-22,-13 0,-2 0,22 -22,11" fill="#F7D060" stroke="#655243" stroke-width="2" stroke-linejoin="round"/><polygon points="0,-2 22,-13 22,11 0,22" fill="#E5B842" stroke="#655243" stroke-width="2" stroke-linejoin="round"/><polygon points="3,0 18,-7 18,9 3,16" fill="#FCE694" stroke="#655243" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="5" r="4" fill="#FFFDF6" stroke="#655243" stroke-width="1.5"/><circle cx="10" cy="5" r="1.3" fill="#655243"/></g>'
+      },
+      chair: {
+        label: '💺 按摩沙發',
+        defaultPos: { x: 248, y: 95 },
+        svg: '<g><ellipse cx="0" cy="20" rx="22" ry="8" fill="rgba(101,82,67,0.14)"/><rect x="-16" y="-18" width="32" height="28" rx="9" fill="#D9B99B" stroke="#655243" stroke-width="2"/><rect x="-12" y="-13" width="24" height="18" rx="5" fill="#EAD2B8" stroke="#655243" stroke-width="1.4"/><rect x="-20" y="-4" width="9" height="20" rx="4.5" fill="#C49F7B" stroke="#655243" stroke-width="2"/><rect x="11" y="-4" width="9" height="20" rx="4.5" fill="#C49F7B" stroke="#655243" stroke-width="2"/><rect x="-12" y="4" width="24" height="13" rx="4" fill="#F2DEC8" stroke="#655243" stroke-width="1.8"/></g>'
+      },
+      shield: {
+        label: '⚔️ 守護盾座',
+        defaultPos: { x: 148, y: 58 },
+        svg: '<g><path d="M0,-18 L15,-11 L13,5 Q0,17 0,17 Q0,17 -13,5 L-15,-11 Z" fill="#B8D8F8" stroke="#655243" stroke-width="2" stroke-linejoin="round"/><path d="M0,-13 L10,-8 L8,3 Q0,11 0,11 Q0,11 -8,3 L-10,-8 Z" fill="#E6F2FF" stroke="#655243" stroke-width="1.4"/><circle cx="0" cy="-2" r="3" fill="#F7D060" stroke="#655243" stroke-width="1.4"/></g>'
+      },
+      deed: {
+        label: '🔑 門牌相框',
+        defaultPos: { x: 96, y: 78 },
+        svg: '<g><polygon points="-14,-6 14,-19 14,5 -14,18" fill="#E6B88A" stroke="#655243" stroke-width="2" stroke-linejoin="round"/><polygon points="-10,-4 10,-13 10,3 -10,12" fill="#FFFDF6" stroke="#655243" stroke-width="1.3"/><line x1="-5" y1="2" x2="5" y2="-3" stroke="#EB7142" stroke-width="2" stroke-linecap="round"/></g>'
+      },
+      scooter: {
+        label: '🛵 復古速克達',
+        defaultPos: { x: 96, y: 126 },
+        svg: '<g><ellipse cx="0" cy="16" rx="22" ry="6" fill="rgba(101,82,67,0.14)"/><circle cx="-13" cy="11" r="6.5" fill="#5A4638"/><circle cx="-13" cy="11" r="2.8" fill="#FFF"/><circle cx="13" cy="11" r="6.5" fill="#5A4638"/><circle cx="13" cy="11" r="2.8" fill="#FFF"/><path d="M-15,9 Q-13,-5 -4,-3 L7,6 L17,6 Q19,-4 9,-5 L-2,-5" fill="#A8DAC7" stroke="#655243" stroke-width="2" stroke-linejoin="round"/><ellipse cx="7" cy="-5" rx="8" ry="3.5" fill="#D9A87E" stroke="#655243" stroke-width="1.8"/><line x1="-5" y1="-3" x2="-9" y2="-15" stroke="#655243" stroke-width="2" stroke-linecap="round"/><circle cx="-10" cy="-15" r="3.2" fill="#FFF6C4" stroke="#655243" stroke-width="1.6"/></g>'
+      },
+      projector: {
+        label: '🍿 劇院投影機',
+        defaultPos: { x: 136, y: 158 },
+        svg: '<g><ellipse cx="2" cy="18" rx="22" ry="6" fill="rgba(101,82,67,0.14)"/><rect x="-16" y="0" width="26" height="16" rx="3" fill="#E8CAA4" stroke="#655243" stroke-width="2"/><rect x="-12" y="-9" width="18" height="10" rx="3" fill="#D8D4CE" stroke="#655243" stroke-width="1.8"/><circle cx="0" cy="-4" r="3" fill="#4A3E35"/><path d="M13,2 L22,2 L20,16 L15,16 Z" fill="#FFDFD3" stroke="#655243" stroke-width="1.6"/><circle cx="17.5" cy="0" r="3.5" fill="#FFF5BA" stroke="#655243" stroke-width="1.4"/></g>'
+      },
+      phone: {
+        label: '📱 智慧手機座',
+        defaultPos: { x: 300, y: 124 },
+        svg: '<g><ellipse cx="0" cy="14" rx="12" ry="4" fill="rgba(101,82,67,0.12)"/><rect x="-8" y="-14" width="16" height="25" rx="3.5" fill="#8ECAE6" stroke="#655243" stroke-width="2"/><rect x="-5.5" y="-10" width="11" height="17" rx="1.5" fill="#EBF8FF"/><circle cx="0" cy="8.5" r="1.3" fill="#655243"/></g>'
+      },
+      robot: {
+        label: '🤖 AI機器助手',
+        defaultPos: { x: 274, y: 158 },
+        svg: '<g><ellipse cx="0" cy="11" rx="14" ry="4.5" fill="rgba(101,82,67,0.12)"/><line x1="0" y1="-16" x2="0" y2="-11" stroke="#655243" stroke-width="1.8"/><circle cx="0" cy="-17" r="2.2" fill="#FF8FA3" stroke="#655243" stroke-width="1.4"/><rect x="-11" y="-11" width="22" height="18" rx="5" fill="#DCE2E8" stroke="#655243" stroke-width="2"/><circle cx="-4" cy="-3" r="2" fill="#4A3E35"/><circle cx="4" cy="-3" r="2" fill="#4A3E35"/><line x1="-3.5" y1="2.5" x2="3.5" y2="2.5" stroke="#655243" stroke-width="1.6" stroke-linecap="round"/></g>'
+      },
+      crystal: {
+        label: '🔮 智慧水晶球',
+        defaultPos: { x: 326, y: 142 },
+        svg: '<g><ellipse cx="0" cy="14" rx="12" ry="4" fill="rgba(101,82,67,0.12)"/><path d="M-9,7 L9,7 L6,13 L-6,13 Z" fill="#D4A373" stroke="#655243" stroke-width="1.8"/><circle cx="0" cy="-1" r="9" fill="#DEC9F9" stroke="#655243" stroke-width="1.8"/><circle cx="-3" cy="-4" r="2.5" fill="#FFF" opacity="0.8"/></g>'
+      },
+      plant: {
+        label: '🪴 療癒龜背芋',
+        defaultPos: { x: 64, y: 138 },
+        svg: '<g><ellipse cx="0" cy="17" rx="12" ry="4" fill="rgba(101,82,67,0.12)"/><polygon points="-8,4 8,4 6,16 -6,16" fill="#E09F7D" stroke="#655243" stroke-width="1.8"/><ellipse cx="-5" cy="-5" rx="6" ry="9" transform="rotate(-20 -5 -5)" fill="#84B59F" stroke="#655243" stroke-width="1.8"/><ellipse cx="5" cy="-6" rx="6" ry="9" transform="rotate(20 5 -6)" fill="#68A382" stroke="#655243" stroke-width="1.8"/></g>'
+      },
+      coffee: {
+        label: '☕ 義式咖啡機',
+        defaultPos: { x: 162, y: 102 },
+        svg: '<g><ellipse cx="0" cy="13" rx="12" ry="4" fill="rgba(101,82,67,0.12)"/><rect x="-10" y="-13" width="20" height="24" rx="3.5" fill="#E6B89C" stroke="#655243" stroke-width="1.8"/><rect x="-4.5" y="0" width="9" height="8" rx="1.5" fill="#FFFDF8" stroke="#655243" stroke-width="1.4"/><circle cx="0" cy="-7" r="2.2" fill="#FFF" stroke="#655243" stroke-width="1.4"/></g>'
+      },
+      game: {
+        label: '🎮 電玩街機',
+        defaultPos: { x: 224, y: 172 },
+        svg: '<g><ellipse cx="0" cy="14" rx="13" ry="4" fill="rgba(101,82,67,0.12)"/><rect x="-11" y="-14" width="22" height="26" rx="4.5" fill="#FFCAD4" stroke="#655243" stroke-width="1.8"/><rect x="-7" y="-10" width="14" height="10" rx="2" fill="#FFFDF8" stroke="#655243" stroke-width="1.4"/><circle cx="-3.5" cy="4.5" r="1.8" fill="#4A3E35"/><circle cx="3.5" cy="4.5" r="1.8" fill="#EB7142"/></g>'
+      }
+    };
+
+    var NEW_ITEM_TEMPLATES = [
+      { icon: '🍰', name: '下午茶', price: 150 },
+      { icon: '🏪', name: '超商零食', price: 70 },
+      { icon: '🚕', name: '計程車', price: 180 },
+      { icon: '🎮', name: '電玩娛樂', price: 300 },
+      { icon: '🏥', name: '醫療保健', price: 200 },
+      { icon: '🎁', name: '禮物人情', price: 600 }
+    ];
+
+    var ESTATES = [
+      { stage: 1, agePrefix: '👶 幼年期', houseName: '溫馨紙箱小窩', houseIcon: '📦', minExp: 0, maxExp: 200, hasPartner: false, desc: '剛出生不久，住在鋪滿軟墊的紙箱小窩' },
+      { stage: 2, agePrefix: '🧢 青少年期', houseName: '陽光小套房', houseIcon: '🏠', minExp: 200, maxExp: 450, hasPartner: false, desc: '搬進採光超好的小套房，擺滿固定開銷家具！' },
+      { stage: 3, agePrefix: '💼 成年期', houseName: '獨立門牌一房一廳', houseIcon: '🔑', minExp: 450, maxExp: 750, hasPartner: false, desc: '成熟獨立！擁有專屬獨立門牌與寬敞客廳' },
+      { stage: 4, agePrefix: '💍 成婚期', houseName: '甜蜜雙層樓中樓', houseIcon: '🏡', minExp: 750, maxExp: 950, hasPartner: true, desc: '迎娶同物種伴侶成婚！夫妻一起住進樓中樓' },
+      { stage: 5, agePrefix: '👨‍👩‍👧‍👦 養育下一代', houseName: '三代同堂透天厝', houseIcon: '🏰', minExp: 950, maxExp: 1000, hasPartner: true, desc: '升格透天厝！父母退居1樓孝親房，養育下一代' }
+    ];
+
+    var DEFAULT_CATEGORIES = [
+      { id: 'breakfast', name: '早餐', icon: '🥐', defaultPrice: 65, presets: [50, 65, 90] },
+      { id: 'lunch', name: '午餐', icon: '🍱', defaultPrice: 120, presets: [100, 120, 150] },
+      { id: 'dinner', name: '晚餐', icon: '🍜', defaultPrice: 150, presets: [120, 150, 220] },
+      { id: 'drink', name: '手搖咖啡', icon: '🧋', defaultPrice: 60, presets: [45, 60, 75] },
+      { id: 'supper', name: '宵夜', icon: '🌙', defaultPrice: 110, presets: [80, 110, 160] },
+      { id: 'other', name: '聚餐日用', icon: '🛍️', defaultPrice: 200, presets: [100, 250, 500] }
+    ];
+
+    var DEFAULT_EQUIPMENTS = [
+      { id: 'fx_usd_ins', name: '美金保險 (月扣繳)', price: 25000, gear: '黃金神聖保險金庫', spriteKey: 'vault', enabled: true },
+      { id: 'fx_parents', name: '孝親費 (月固定)', price: 10000, gear: '皇家孝親頂級按摩座', spriteKey: 'chair', enabled: true },
+      { id: 'fx_dis_ins', name: '失能險 (月扣繳)', price: 10000, gear: '鈦合金守護盾牌座', spriteKey: 'shield', enabled: true },
+      { id: 'fx_rent', name: '房租 (月固定)', price: 6000, gear: '黃金地段門牌地契', spriteKey: 'deed', enabled: true },
+      { id: 'fx_tpass', name: 'TPASS 通勤月票', price: 1200, gear: '薄荷綠復古速克達', spriteKey: 'scooter', enabled: true },
+      { id: 'fx_phone', name: '手機費 (月固定)', price: 599, gear: '智慧型手機充電座', spriteKey: 'phone', enabled: true },
+      { id: 'fx_netflix', name: 'Netflix (月固定)', price: 390, gear: '家庭劇院投影與爆米花', spriteKey: 'projector', enabled: true },
+      { id: 'fx_grok', name: 'Grok 訂閱 (月固定)', price: 187, gear: 'Grok AI 機械小助手', spriteKey: 'robot', enabled: true },
+      { id: 'fx_gemini', name: 'Gemini 訂閱 (月固定)', price: 160, gear: 'Gemini 智慧水晶球', spriteKey: 'crystal', enabled: true }
+    ];
+
+    function getTierInfo(price) {
+      if (price >= 10000) return { code: 'UR', label: 'UR 神話鎮宅裝', buff: '經驗+25%' };
+      if (price >= 3000) return { code: 'SSR', label: 'SSR 傳說房產裝', buff: '經驗+15%' };
+      if (price >= 1000) return { code: 'SR', label: 'SR 史詩座駕裝', buff: '經驗+10%' };
+      return { code: 'R', label: 'R 精緻生活小物', buff: '心情滿格' };
+    }
+
+    var state = {
+      speciesId: 'hamster',
+      categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
+      fixedEquips: JSON.parse(JSON.stringify(DEFAULT_EQUIPMENTS)),
+      selectedCatId: 'lunch',
+      tempItem: null,
+      currentAmount: 120,
+      selectedExpenseDate: '',
+      exp: 0,
+      generation: 1,
+      statsPeriod: 'month',
+      historyCatFilter: 'all',
+      editingCatId: 'NEW',
+      editingEquipId: null,
+      editingExpenseId: null,
+      selectedSpriteKey: 'coffee',
+      reviewDay: 'yesterday',
+      reviewIndex: 0,
+      expenses: [],
+      deletedIds: []
+    };
+
+    var REVIEW_CARDS = [
+      { catId: 'breakfast', q: '早餐吃了什麼？' },
+      { catId: 'lunch', q: '中午午餐花了多少？' },
+      { catId: 'drink', q: '有買手搖飲或咖啡嗎？' },
+      { catId: 'dinner', q: '晚餐花了多少呢？' },
+      { catId: 'supper', q: '睡前有吃宵夜嗎？' }
+    ];
+    var reviewPrice = 65;
+
+    function triggerHaptic(pattern) {
+      try {
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(pattern || [18]);
+        }
+      } catch (e) {}
+    }
+
+    function getTodayStr(offsetDays) {
+      var d = new Date();
+      d.setDate(d.getDate() + (offsetDays || 0));
+      var yyyy = d.getFullYear();
+      var mm = String(d.getMonth() + 1).padStart(2, '0');
+      var dd = String(d.getDate()).padStart(2, '0');
+      return yyyy + '-' + mm + '-' + dd;
+    }
+
+    function seedDemoData() {
+      var today = getTodayStr(0);
+
+      state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      state.fixedEquips = JSON.parse(JSON.stringify(DEFAULT_EQUIPMENTS));
+      state.exp = 0;
+      state.generation = 1;
+      state.selectedExpenseDate = today;
+      state.expenses = [];
+      saveState();
+    }
+
+    function loadState() {
+      try {
+        var raw = window.localStorage ? window.localStorage.getItem('cozy_pet_v7') : null;
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          for (var k in parsed) {
+            if (Object.prototype.hasOwnProperty.call(parsed, k)) {
+              state[k] = parsed[k];
+            }
+          }
+        } else {
+          seedDemoData();
+        }
+      } catch (e) {
+        seedDemoData();
+      }
+      if (!state.selectedExpenseDate) state.selectedExpenseDate = getTodayStr(0);
+    }
+
+    function saveState() {
+      try {
+        if (window.localStorage) {
+          window.localStorage.setItem('cozy_pet_v7', JSON.stringify(state));
+        }
+      } catch (e) {}
+      if (typeof sbConfig !== 'undefined' && sbConfig.connected) {
+        window.pushToSupabase(false);
+      }
+    }
+
+    var sbConfig = {
+      url: 'https://suanwtnxtakpqxkvtrvi.supabase.co',
+      key: 'sb_publishable_W6zi5wluwSicmFyPyvrUlg_5hct_WbQ',
+      userKey: 'my_ledger',
+      connected: true
+    };
+
+    function normalizeSbUrl(str) {
+      if (!str) return '';
+      str = str.trim().replace(/\/+$/, '');
+      if (str.endsWith('/rest/v1')) {
+        str = str.slice(0, -('/rest/v1'.length)).replace(/\/+$/, '');
+      }
+      return str;
+    }
+
+    function loadSbConfig() {
+      try {
+        var raw = window.localStorage ? window.localStorage.getItem('cozy_pet_sb_config') : null;
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          sbConfig.url = normalizeSbUrl((parsed.url || '').trim());
+          sbConfig.key = (parsed.key || '').trim();
+          sbConfig.userKey = (parsed.userKey || 'my_ledger').trim();
+          sbConfig.connected = Boolean(sbConfig.url && sbConfig.key);
+        }
+      } catch (e) {}
+      updateCloudBadgeUI();
+    }
+
+    function saveSbConfig() {
+      try {
+        if (window.localStorage) {
+          window.localStorage.setItem('cozy_pet_sb_config', JSON.stringify(sbConfig));
+        }
+      } catch (e) {}
+      updateCloudBadgeUI();
+    }
+
+    function updateCloudBadgeUI(statusMsg, isError) {
+      var btn = document.getElementById('cloudStatusBtn');
+      var icon = document.getElementById('cloudStatusIcon');
+      var txt = document.getElementById('cloudStatusText');
+      var banner = document.getElementById('cloudConnectionBanner');
+      if (!btn) return;
+
+      if (sbConfig.connected) {
+        btn.className = 'pill-btn cloud-ok';
+        icon.textContent = '☁️';
+        txt.textContent = '已連線';
+        if (banner) {
+          banner.style.background = isError ? '#FFF0E8' : 'var(--sage-light)';
+          banner.style.color = isError ? '#C0392B' : '#2D6846';
+          banner.textContent = statusMsg || ('✅ 已連線雲端 (' + sbConfig.userKey + ') · 記帳自動 0 秒同步');
+        }
+      } else {
+        btn.className = 'pill-btn cloud-off';
+        icon.textContent = '☁️';
+        txt.textContent = '連後台';
+        if (banner) {
+          banner.style.background = 'var(--bg-soft)';
+          banner.style.color = isError ? '#C0392B' : 'var(--ink-sub)';
+          banner.textContent = statusMsg || '目前狀態：尚未連線（設定後記帳即自動 0 秒雙向同步）';
+        }
+      }
+    }
+
+    window.openCloudSheet = function() {
+      triggerHaptic([15]);
+      document.getElementById('sbUrlInput').value = sbConfig.url || '';
+      document.getElementById('sbKeyInput').value = sbConfig.key || '';
+      document.getElementById('sbUserKeyInput').value = sbConfig.userKey || 'my_ledger';
+      updateCloudBadgeUI();
+      document.getElementById('cloudSheetBackdrop').classList.add('open');
+    };
+
+    window.copySupabaseSql = function() {
+      triggerHaptic([20]);
+      var sqlText = document.getElementById('supabaseSqlCode').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(sqlText).then(function() {
+          showParticle('📋 已複製 SQL 語法！', window.innerWidth / 2 - 70, 180);
+        }).catch(function() {
+          fallbackCopySql(sqlText);
+        });
+      } else {
+        fallbackCopySql(sqlText);
+      }
+    };
+
+    function fallbackCopySql(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+      showParticle('📋 已複製 SQL 語法！', window.innerWidth / 2 - 70, 180);
+    }
+
+    window.saveAndConnectSupabase = function() {
+      triggerHaptic([25]);
+      var url = normalizeSbUrl(document.getElementById('sbUrlInput').value.trim());
+      var key = document.getElementById('sbKeyInput').value.trim();
+      var uKey = document.getElementById('sbUserKeyInput').value.trim() || 'my_ledger';
+
+      if (!url || !key) {
+        updateCloudBadgeUI('⚠️ 請填入 Project URL 與 anon public Key 喔！', true);
+        return;
+      }
+      sbConfig.url = url;
+      sbConfig.key = key;
+      sbConfig.userKey = uKey;
+      sbConfig.connected = true;
+      saveSbConfig();
+      updateCloudBadgeUI('⏳ 正在連線並同步雲端資料...', false);
+
+      window.pullFromSupabase(false, function(foundRemote) {
+        if (!foundRemote) {
+          window.pushToSupabase(true);
+        } else {
+          showParticle('☁️ 雲端連線成功！', window.innerWidth / 2 - 65, 200);
+          window.closeSheet('cloudSheetBackdrop');
+        }
+      });
+    };
+
+    window.pushToSupabase = function(manualNotice) {
+      if (!sbConfig.connected || !sbConfig.url || !sbConfig.key) return;
+      var headers = {
+        'apikey': sbConfig.key,
+        'Authorization': 'Bearer ' + sbConfig.key,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      };
+
+      var profilePayload = [{
+        user_key: sbConfig.userKey,
+        state_json: state,
+        updated_at: new Date().toISOString()
+      }];
+
+      fetch(sbConfig.url + '/rest/v1/pocket_pet_profile?on_conflict=user_key', {
+        method: 'POST',
+        headers: headers,
+        keepalive: true,
+        body: JSON.stringify(profilePayload)
+      }).then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var expRows = state.expenses.slice(0, 100).map(function(e) {
+          var cat = state.categories.find(function(c) { return c.id === e.catId; }) || { name: '其他' };
+          return {
+            id: e.id,
+            user_key: sbConfig.userKey,
+            expense_date: e.date,
+            cat_id: e.catId,
+            cat_name: cat.name,
+            note: e.note,
+            amount: e.amount,
+            ts: e.ts,
+            updated_at: new Date().toISOString()
+          };
+        });
+        if (expRows.length > 0) {
+          return fetch(sbConfig.url + '/rest/v1/pocket_pet_expenses?on_conflict=id', {
+            method: 'POST',
+            headers: headers,
+            keepalive: true,
+            body: JSON.stringify(expRows)
+          });
+        }
+      }).then(function() {
+        updateCloudBadgeUI('✅ 雲端已同步 (' + new Date().toTimeString().slice(0,5) + ')', false);
+        if (manualNotice) {
+          showParticle('☁️ 已備份至 Supabase！', window.innerWidth / 2 - 75, 200);
+          document.getElementById('petSpeech').textContent = '☁️ 記帳與房間進度已秒速同步到你的 Supabase 後台囉！';
+        }
+      }).catch(function(err) {
+        updateCloudBadgeUI('⚠️ 同步失敗：請確認已執行步驟 1 的 SQL 且網址/金鑰正確', true);
+      });
+    };
+
+    window.pullFromSupabase = function(manualNotice, callback) {
+      if (!sbConfig.connected || !sbConfig.url || !sbConfig.key) {
+        if (callback) callback(false);
+        return;
+      }
+      var headers = {
+        'apikey': sbConfig.key,
+        'Authorization': 'Bearer ' + sbConfig.key
+      };
+      var tsBust = Date.now();
+      var profileUrl = sbConfig.url + '/rest/v1/pocket_pet_profile?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=state_json,updated_at&_t=' + tsBust;
+      var expensesUrl = sbConfig.url + '/rest/v1/pocket_pet_expenses?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=*&order=id.desc&limit=200&_t=' + tsBust;
+
+      Promise.all([
+        fetch(profileUrl, { method: 'GET', headers: headers, cache: 'no-store' }).then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        }),
+        fetch(expensesUrl, { method: 'GET', headers: headers, cache: 'no-store' }).then(function(r) {
+          return r.ok ? r.json() : [];
+        }).catch(function() { return []; })
+      ])
+        .then(function(results) {
+          var rows = results[0] || [];
+          var remoteExpRows = results[1] || [];
+          var hasProfile = rows && rows.length > 0 && rows[0].state_json;
+
+          if (hasProfile || remoteExpRows.length > 0) {
+            var localExpenses = Array.isArray(state.expenses) ? state.expenses.slice() : [];
+            var localDeleted = Array.isArray(state.deletedIds) ? state.deletedIds.slice() : [];
+            var localExp = state.exp || 0;
+            var localGen = state.generation || 1;
+            var remoteState = hasProfile ? rows[0].state_json : {};
+
+            for (var k in remoteState) {
+              if (Object.prototype.hasOwnProperty.call(remoteState, k)) {
+                state[k] = remoteState[k];
+              }
+            }
+
+            var deletedMap = {};
+            localDeleted.concat(Array.isArray(remoteState.deletedIds) ? remoteState.deletedIds : []).forEach(function(did) {
+              deletedMap[String(did)] = true;
+            });
+            state.deletedIds = Object.keys(deletedMap).map(function(x) { return Number(x) || x; }).slice(-200);
+
+            var mergedMap = {};
+            function addExpItem(item) {
+              if (!item || !item.id) return;
+              if (deletedMap[String(item.id)]) return;
+              var key = String(item.id);
+              var itemUpd = Number(item.updatedAt) || (item.updated_at ? new Date(item.updated_at).getTime() : 0) || 0;
+              var existing = mergedMap[key];
+              if (existing && (existing.updatedAt || 0) > itemUpd) return;
+              var amt = Number(item.amount);
+              mergedMap[key] = {
+                id: Number(item.id) || item.id,
+                catId: item.catId || item.cat_id || 'other',
+                amount: !isNaN(amt) ? amt : 0,
+                note: item.note || item.cat_name || '消費',
+                date: item.date || item.expense_date || getTodayStr(0),
+                ts: item.ts || '12:00',
+                updatedAt: itemUpd
+              };
+            }
+
+            remoteExpRows.forEach(function(r) {
+              addExpItem({
+                id: r.id,
+                catId: r.cat_id,
+                amount: r.amount,
+                note: r.note || r.cat_name,
+                date: r.expense_date,
+                ts: r.ts,
+                updated_at: r.updated_at
+              });
+            });
+            if (Array.isArray(remoteState.expenses)) {
+              remoteState.expenses.forEach(addExpItem);
+            }
+            localExpenses.forEach(addExpItem);
+
+            var mergedList = Object.keys(mergedMap).map(function(idKey) {
+              return mergedMap[idKey];
+            }).sort(function(a, b) {
+              return (Number(b.id) || 0) - (Number(a.id) || 0);
+            });
+
+            var prevRemoteCount = Array.isArray(remoteState.expenses) ? remoteState.expenses.length : 0;
+            state.expenses = mergedList;
+            state.generation = Math.max(localGen, Number(state.generation) || 1);
+            var minExpFromItems = (mergedList.length * 35) % 1000;
+            state.exp = Math.max(localExp, Number(state.exp) || 0, minExpFromItems);
+
+            try {
+              if (window.localStorage) {
+                window.localStorage.setItem('cozy_pet_v7', JSON.stringify(state));
+              }
+            } catch (e) {}
+            renderAll();
+            updateCloudBadgeUI('✅ 已從雲端載入最新進度 (' + new Date().toTimeString().slice(0,5) + ')', false);
+
+            if (mergedList.length !== prevRemoteCount || !hasProfile) {
+              window.pushToSupabase(false);
+            }
+
+            if (manualNotice) {
+              showParticle('⬇️ 已同步雲端資料！', window.innerWidth / 2 - 70, 200);
+              document.getElementById('petSpeech').textContent = '☁️ 已從 Supabase 載入你最新的記帳與小窩進度！';
+            }
+            if (callback) callback(true);
+          } else {
+            updateCloudBadgeUI('ℹ️ 雲端尚無紀錄，已將本機進度初始上傳至雲端', false);
+            if (callback) {
+              callback(false);
+            } else {
+              window.pushToSupabase(false);
+            }
+          }
+        })
+        .catch(function(err) {
+          updateCloudBadgeUI('⚠️ 無法連線：請確認步驟 1 的 SQL 已執行且金鑰正確', true);
+          if (callback) callback(false);
+        });
+    };
+
+
+    function getCurrentSpecies() {
+      for (var i = 0; i < PET_SPECIES.length; i++) {
+        if (PET_SPECIES[i].id === state.speciesId) return PET_SPECIES[i];
+      }
+      return PET_SPECIES[0];
+    }
+
+    function getCurrentEstate() {
+      var capped = Math.min(999, state.exp);
+      for (var i = 0; i < ESTATES.length; i++) {
+        if (capped >= ESTATES[i].minExp && capped < ESTATES[i].maxExp) return ESTATES[i];
+      }
+      return ESTATES[ESTATES.length - 1];
+    }
+
+    function renderStage() {
+      var sp = getCurrentSpecies();
+      var est = getCurrentEstate();
+      var nextEst = ESTATES[Math.min(ESTATES.length - 1, est.stage)];
+
+      document.getElementById('currentSpeciesMini').textContent = sp.emoji;
+      document.getElementById('topHouseIcon').textContent = est.houseIcon;
+      document.getElementById('topHouseTitle').textContent = est.houseName;
+      document.getElementById('stageAgeBadge').textContent = est.agePrefix + ' · ' + sp.name + ' (第' + state.generation + '代)';
+
+      var activeEquips = state.fixedEquips.filter(function(e) { return e.enabled; });
+      document.getElementById('activeGearCountLabel').textContent = '🛋️ 房內 ' + activeEquips.length + ' 件家具 ▸';
+
+      var furnLayer = document.getElementById('dynamicFurnitureLayer');
+      furnLayer.innerHTML = state.fixedEquips.map(function(eq, idx) {
+        var sprite = FURNITURE_SPRITES[eq.spriteKey] || FURNITURE_SPRITES.plant;
+        var pos = sprite.defaultPos || { x: 80 + (idx * 35) % 240, y: 112 + (idx * 20) % 52 };
+        return '<g class="furniture-node ' + (eq.enabled ? '' : 'hidden-gear') + '" ' +
+          'transform="translate(' + pos.x + ', ' + pos.y + ')" ' +
+          'onclick="event.stopPropagation(); window.inspectFurniture(\'' + eq.id + '\')">' +
+          sprite.svg +
+          '</g>';
+      }).join('');
+
+      var petLayer = document.getElementById('handDrawnPetLayer');
+      if (est.hasPartner) {
+        petLayer.innerHTML = sp.renderSvg(190, 132, 0.88) + sp.renderSvg(226, 136, 0.82);
+      } else {
+        petLayer.innerHTML = sp.renderSvg(206, 132, 0.94);
+      }
+
+      document.getElementById('nextHouseHint').textContent = est.stage < 5
+        ? '下一階：' + nextEst.houseIcon + ' ' + nextEst.houseName
+        : '🎉 滿級！再餵食迎接第' + (state.generation + 1) + '代';
+      document.getElementById('expText').textContent = state.exp + '/1000';
+      document.getElementById('expFill').style.width = Math.min(100, Math.round(state.exp / 10)) + '%';
+    }
+
+    window.inspectFurniture = function(equipId) {
+      triggerHaptic([15]);
+      var eq = state.fixedEquips.find(function(e) { return e.id === equipId; });
+      if (!eq) return;
+      var tier = getTierInfo(eq.price);
+      document.getElementById('petSpeech').textContent = '🛋️【' + eq.gear + '】' + eq.name + ' $' + eq.price.toLocaleString() + '/月 (' + tier.buff + ')';
+    };
+
+    window.pokePet = function() {
+      triggerHaptic([15, 25]);
+      var sp = getCurrentSpecies();
+      var est = getCurrentEstate();
+      document.getElementById('petSpeech').textContent = sp.emoji + '「我們畫風完全融合囉！目前住在' + est.houseName + '～」';
+      var petGroup = document.getElementById('handDrawnPetLayer');
+      petGroup.classList.remove('chewing');
+      void petGroup.offsetWidth;
+      petGroup.classList.add('chewing');
+    };
+
+    window.openSpeciesSheet = function() {
+      triggerHaptic([15]);
+      var grid = document.getElementById('speciesGrid');
+      grid.innerHTML = PET_SPECIES.map(function(sp) {
+        return '<div class="species-card ' + (sp.id === state.speciesId ? 'active' : '') + '" onclick="window.selectSpecies(\'' + sp.id + '\')">' +
+          '<svg viewBox="-32 -32 64 62" style="width:44px; height:42px;">' + sp.renderSvg(0, 0, 0.92) + '</svg>' +
+          '<span style="font-size:12px; font-weight:900;">' + sp.name + '</span>' +
+          '<span style="font-size:10px; color:var(--ink-sub);">手繪插畫風</span>' +
+        '</div>';
+      }).join('');
+      document.getElementById('speciesSheetBackdrop').classList.add('open');
+    };
+
+    window.selectSpecies = function(spId) {
+      triggerHaptic([20]);
+      state.speciesId = spId;
+      saveState();
+      window.closeSheet('speciesSheetBackdrop');
+      renderAll();
+      var sp = getCurrentSpecies();
+      document.getElementById('petSpeech').textContent = '🎉 已換成手繪【' + sp.name + '】入駐小房間！';
+    };
+
+    function renderCapsules() {
+      var grid = document.getElementById('capsuleGrid');
+      grid.innerHTML = state.categories.map(function(cat) {
+        return '<div class="capsule-btn" onclick="window.openPriceSheet(\'' + cat.id + '\', 0)">' +
+          '<div class="cap-left">' +
+            '<div class="cap-icon-svg">' + cat.icon + '</div>' +
+            '<div class="cap-text">' +
+              '<span class="cap-name">' + cat.name + '</span>' +
+              '<span class="cap-price">預設 $' + cat.defaultPrice + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<button class="zap-btn" onclick="window.instantZap(event, \'' + cat.id + '\')" title="1秒直記今天預設價">⚡</button>' +
+        '</div>';
+      }).join('');
+
+      var today = getTodayStr(0);
+      var todayItems = state.expenses.filter(function(e) { return e.date === today; });
+      var todaySum = todayItems.reduce(function(s, e) { return s + e.amount; }, 0);
+      document.getElementById('todayCountBadge').textContent = '(' + todayItems.length + ' 筆)';
+      document.getElementById('todayTotalText').textContent = '$' + todaySum.toLocaleString();
+    }
+
+    window.instantZap = function(evt, catId) {
+      evt.stopPropagation();
+      var cat = state.categories.find(function(c) { return c.id === catId; });
+      if (!cat) return;
+      recordExpense(cat.id, cat.icon, cat.name, cat.defaultPrice, cat.name, getTodayStr(0), evt);
+    };
+
+    window.openPriceSheet = function(catId, defaultDateOffset) {
+      triggerHaptic([15]);
+      state.editingExpenseId = null;
+      var offset = typeof defaultDateOffset === 'number' ? defaultDateOffset : 0;
+      state.tempItem = null;
+      state.selectedCatId = catId;
+      var cat = state.categories.find(function(c) { return c.id === catId; }) || state.categories[0];
+      state.currentAmount = cat.defaultPrice;
+      document.getElementById('sheetExactInput').value = cat.defaultPrice;
+      document.getElementById('sheetNoteInput').value = '';
+      window.setExpenseDateOffset(offset, offset === 0 ? 'today' : (offset === -1 ? 'yesterday' : 'custom'));
+
+      var delBtn = document.getElementById('sheetDeleteExpenseBtn');
+      if (delBtn) delBtn.style.display = 'none';
+      var pinBtn = document.getElementById('sheetPinDefaultBtn');
+      if (pinBtn) pinBtn.style.display = 'inline-flex';
+
+      renderSheetCatSwitcher();
+      updatePriceSheetUI();
+      document.getElementById('priceSheetBackdrop').classList.add('open');
+    };
+
+    window.openBackdateSheet = function() {
+      window.openPriceSheet(state.selectedCatId, -7);
+    };
+
+    window.openPriceSheetForTemp = function(icon, name, price) {
+      triggerHaptic([15]);
+      state.editingExpenseId = null;
+      state.tempItem = { id: 'other', icon: icon, name: name, defaultPrice: price, presets: [Math.max(10, price - 40), price, price + 50] };
+      state.currentAmount = price;
+      document.getElementById('sheetExactInput').value = price;
+      document.getElementById('sheetNoteInput').value = name;
+      window.setExpenseDateOffset(0, 'today');
+
+      var delBtn = document.getElementById('sheetDeleteExpenseBtn');
+      if (delBtn) delBtn.style.display = 'none';
+      var pinBtn = document.getElementById('sheetPinDefaultBtn');
+      if (pinBtn) pinBtn.style.display = 'none';
+
+      renderSheetCatSwitcher();
+      updatePriceSheetUI();
+      document.getElementById('priceSheetBackdrop').classList.add('open');
+    };
+
+    window.openEditExpenseSheet = function(id) {
+      var exp = state.expenses.find(function(e) { return String(e.id) === String(id); });
+      if (!exp) return;
+      triggerHaptic([15]);
+      var todayModal = document.getElementById('todaySheetBackdrop');
+      state.returnToTodaySheet = Boolean(todayModal && todayModal.classList.contains('open'));
+      if (todayModal) todayModal.classList.remove('open');
+
+      state.editingExpenseId = exp.id;
+      state.tempItem = null;
+      state.selectedCatId = exp.catId;
+      state.currentAmount = Number(exp.amount) || 0;
+      state.selectedExpenseDate = exp.date || getTodayStr(0);
+
+      document.getElementById('sheetExactInput').value = state.currentAmount;
+      document.getElementById('sheetNoteInput').value = exp.note || '';
+      document.getElementById('sheetDateInput').value = state.selectedExpenseDate;
+
+      var today = getTodayStr(0);
+      var yest = getTodayStr(-1);
+      var d2 = getTodayStr(-2);
+      var dpToday = document.getElementById('dp-today');
+      var dpYest = document.getElementById('dp-yesterday');
+      var dp2 = document.getElementById('dp-2days');
+      if (dpToday) dpToday.classList.toggle('active', state.selectedExpenseDate === today);
+      if (dpYest) dpYest.classList.toggle('active', state.selectedExpenseDate === yest);
+      if (dp2) dp2.classList.toggle('active', state.selectedExpenseDate === d2);
+
+      var delBtn = document.getElementById('sheetDeleteExpenseBtn');
+      if (delBtn) delBtn.style.display = 'block';
+
+      var pinBtn = document.getElementById('sheetPinDefaultBtn');
+      if (pinBtn) pinBtn.style.display = 'none';
+
+      renderSheetCatSwitcher();
+      updatePriceSheetUI();
+      document.getElementById('priceSheetBackdrop').classList.add('open');
+    };
+
+    window.deleteEditingExpense = function() {
+      if (!state.editingExpenseId) return;
+      var id = state.editingExpenseId;
+      state.editingExpenseId = null;
+      window.closeSheet('priceSheetBackdrop');
+      window.deleteExpenseItem(id);
+      showParticle('🗑️ 已刪除此筆記帳', window.innerWidth / 2 - 70, 200);
+    };
+
+    window.focusExactAmount = function() {
+      triggerHaptic([10]);
+      var inp = document.getElementById('sheetExactInput');
+      if (inp) {
+        inp.focus();
+        inp.select();
+      }
+    };
+
+    window.clearExactAmount = function() {
+      triggerHaptic([15]);
+      state.currentAmount = 0;
+      var inp = document.getElementById('sheetExactInput');
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
+      updatePriceSheetUI();
+    };
+
+    function renderSheetCatSwitcher() {
+      var row = document.getElementById('sheetCatSwitchRow');
+      row.innerHTML = state.categories.map(function(c) {
+        var isActive = !state.tempItem && state.selectedCatId === c.id;
+        return '<button class="sub-pill ' + (isActive ? 'active' : '') + '" onclick="window.switchCatInsideSheet(\'' + c.id + '\')">' + c.icon + ' ' + c.name + '</button>';
+      }).join('');
+    }
+
+    window.switchCatInsideSheet = function(catId) {
+      triggerHaptic([10]);
+      state.tempItem = null;
+      state.selectedCatId = catId;
+      var cat = state.categories.find(function(c) { return c.id === catId; });
+      if (cat && !state.editingExpenseId) {
+        state.currentAmount = cat.defaultPrice;
+      }
+      renderSheetCatSwitcher();
+      updatePriceSheetUI();
+    };
+
+    window.setExpenseDateOffset = function(offsetDays, pillKey) {
+      var dStr = getTodayStr(offsetDays);
+      state.selectedExpenseDate = dStr;
+      document.getElementById('sheetDateInput').value = dStr;
+      ['today', 'yesterday', '2days'].forEach(function(k) {
+        var el = document.getElementById('dp-' + k);
+        if (el) el.classList.toggle('active', k === pillKey);
+      });
+      updatePriceSheetUI();
+    };
+
+    window.onCustomDatePick = function(val) {
+      if (!val) return;
+      state.selectedExpenseDate = val;
+      var today = getTodayStr(0);
+      var yest = getTodayStr(-1);
+      var d2 = getTodayStr(-2);
+      document.getElementById('dp-today').classList.toggle('active', val === today);
+      document.getElementById('dp-yesterday').classList.toggle('active', val === yest);
+      document.getElementById('dp-2days').classList.toggle('active', val === d2);
+      updatePriceSheetUI();
+    };
+
+    function getActiveSheetCat() {
+      if (state.tempItem) return state.tempItem;
+      return state.categories.find(function(c) { return c.id === state.selectedCatId; }) || state.categories[0];
+    }
+
+    function updatePriceSheetUI() {
+      var cat = getActiveSheetCat();
+      var isEditing = Boolean(state.editingExpenseId);
+
+      document.getElementById('sheetCatTitle').textContent = isEditing
+        ? '✏️ 修改明細 · ' + cat.icon + ' ' + cat.name
+        : cat.icon + ' ' + cat.name;
+
+      document.getElementById('sheetAmountDisplay').textContent = '$' + state.currentAmount;
+      document.getElementById('sheetCtaPrice').textContent = '$' + state.currentAmount;
+
+      var slider = document.getElementById('sheetSlider');
+      if (slider) {
+        var sliderMax = Math.max(1000, state.currentAmount > 1000 ? Math.ceil(state.currentAmount / 500) * 500 : 1000);
+        slider.max = sliderMax;
+        slider.value = state.currentAmount;
+      }
+
+      var exactInput = document.getElementById('sheetExactInput');
+      if (exactInput && document.activeElement !== exactInput) {
+        exactInput.value = state.currentAmount > 0 ? state.currentAmount : '';
+      }
+
+      var isToday = state.selectedExpenseDate === getTodayStr(0);
+      document.getElementById('sheetCtaLabel').textContent = isEditing
+        ? '💾 儲存修改金額'
+        : (isToday ? '🍖 確認餵食記帳 (今天)' : '📅 補記至 ' + state.selectedExpenseDate.slice(5));
+
+      document.getElementById('sheetPresetChips').innerHTML = (cat.presets || [50, 100, 150]).map(function(p) {
+        return '<button class="sub-pill ' + (state.currentAmount === p ? 'active' : '') + '" onclick="window.setSheetAmount(' + p + ')">$' + p + '</button>';
+      }).join('');
+    }
+
+    window.setSheetAmount = function(val) {
+      triggerHaptic([12]);
+      state.currentAmount = val;
+      updatePriceSheetUI();
+    };
+
+    window.onSliderChange = function(val) {
+      triggerHaptic([8]);
+      state.currentAmount = parseInt(val, 10) || 0;
+      updatePriceSheetUI();
+    };
+
+    window.adjustAmount = function(delta) {
+      triggerHaptic([15]);
+      state.currentAmount = Math.max(0, state.currentAmount + delta);
+      updatePriceSheetUI();
+    };
+
+    window.onExactInput = function(val) {
+      var clean = String(val).replace(/[^0-9]/g, '');
+      state.currentAmount = clean === '' ? 0 : (parseInt(clean, 10) || 0);
+      document.getElementById('sheetAmountDisplay').textContent = '$' + state.currentAmount;
+      document.getElementById('sheetCtaPrice').textContent = '$' + state.currentAmount;
+      var slider = document.getElementById('sheetSlider');
+      if (slider) {
+        var sliderMax = Math.max(1000, state.currentAmount > 1000 ? Math.ceil(state.currentAmount / 500) * 500 : 1000);
+        slider.max = sliderMax;
+        slider.value = state.currentAmount;
+      }
+      var cat = getActiveSheetCat();
+      document.getElementById('sheetPresetChips').innerHTML = (cat.presets || []).map(function(p) {
+        return '<button class="sub-pill ' + (state.currentAmount === p ? 'active' : '') + '" onclick="window.setSheetAmount(' + p + ')">$' + p + '</button>';
+      }).join('');
+    };
+
+    window.pinCurrentAsDefault = function() {
+      triggerHaptic([25]);
+      var cat = state.categories.find(function(c) { return c.id === state.selectedCatId; });
+      if (cat) {
+        cat.defaultPrice = state.currentAmount;
+        cat.presets = [Math.max(10, state.currentAmount - 30), state.currentAmount, state.currentAmount + 40];
+        saveState();
+        renderCapsules();
+        updatePriceSheetUI();
+        showParticle('📌 預設價已改為 $' + state.currentAmount, window.innerWidth / 2 - 70, 220);
+      }
+    };
+
+    window.confirmSheetExpense = function(evt) {
+      var cat = getActiveSheetCat();
+      var noteVal = document.getElementById('sheetNoteInput').value.trim() || cat.name;
+      var targetDate = state.selectedExpenseDate || getTodayStr(0);
+
+      if (state.editingExpenseId) {
+        var exp = state.expenses.find(function(e) { return String(e.id) === String(state.editingExpenseId); });
+        if (exp) {
+          exp.catId = cat.id;
+          exp.amount = state.currentAmount;
+          exp.note = noteVal;
+          exp.date = targetDate;
+          saveState();
+          showParticle('✏️ 已更新為 $' + state.currentAmount, window.innerWidth / 2 - 70, 200);
+          document.getElementById('petSpeech').textContent = '✏️ 已成功更新記帳：' + cat.icon + noteVal + ' 為 $' + state.currentAmount + '！';
+          renderAll();
+          renderTodaySheetList();
+          if (typeof window.renderHistoryLookup === 'function') {
+            window.renderHistoryLookup();
+          }
+        }
+        state.editingExpenseId = null;
+        window.closeSheet('priceSheetBackdrop');
+        return;
+      }
+
+      window.closeSheet('priceSheetBackdrop');
+      recordExpense(cat.id, cat.icon, cat.name, state.currentAmount, noteVal, targetDate, evt);
+    };
+
+    function recordExpense(catId, icon, catName, amount, note, dateStr, evt) {
+      triggerHaptic([30, 40]);
+      var now = new Date();
+      var ts = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+      var newExpense = {
+        id: Date.now(),
+        catId: catId,
+        amount: amount,
+        note: note,
+        date: dateStr,
+        ts: ts
+      };
+      state.expenses.unshift(newExpense);
+
+      var sp = getCurrentSpecies();
+      state.exp += 35;
+      if (state.exp >= 1000) {
+        state.generation += 1;
+        state.exp = 100;
+        document.getElementById('petSpeech').textContent = '🎉 透天厝落成！第 ' + state.generation + ' 代小' + sp.unit + '誕生囉！';
+      } else {
+        var dLabel = dateStr === getTodayStr(0) ? '今日' : dateStr.slice(5);
+        document.getElementById('petSpeech').textContent = sp.emoji + ' 已記【' + dLabel + '】' + icon + note + ' ($' + amount + ') +35 EXP';
+      }
+
+      saveState();
+      var x = evt && evt.clientX ? evt.clientX : window.innerWidth / 2;
+      var y = evt && evt.clientY ? evt.clientY : window.innerHeight / 2;
+      showParticle(icon + ' +35 EXP', Math.max(20, x - 45), Math.max(40, y - 20));
+
+      var petGroup = document.getElementById('handDrawnPetLayer');
+      if (petGroup) {
+        petGroup.classList.remove('chewing');
+        void petGroup.offsetWidth;
+        petGroup.classList.add('chewing');
+      }
+
+      renderAll();
+      window.showUndoSnackbar(newExpense);
+    }
+
+    /* Undo & Quick-Edit Snackbar */
+    window.showUndoSnackbar = function(expenseItem) {
+      var existing = document.getElementById('undoSnackbar');
+      if (existing) existing.remove();
+      if (window._undoTimeout) clearTimeout(window._undoTimeout);
+
+      var cat = state.categories.find(function(c) { return c.id === expenseItem.catId; }) || { icon: '✨', name: '消費' };
+      var snackbar = document.createElement('div');
+      snackbar.id = 'undoSnackbar';
+      snackbar.className = 'undo-snackbar';
+      snackbar.innerHTML = 
+        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">' + cat.icon + ' ' + (expenseItem.note || cat.name) + ' <b>$' + expenseItem.amount + '</b></span>' +
+        '<div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">' +
+          '<button class="undo-btn-pill" style="padding:3px 8px;" onclick="window.editFromSnackbar(' + expenseItem.id + ')" title="修改">✎</button>' +
+          '<button class="undo-btn-ghost" onclick="window.undoExpense(' + expenseItem.id + ')">⤺ 撤銷</button>' +
+          '<button class="undo-btn-ghost" style="padding:4px 6px;" onclick="window.closeUndoSnackbar()">✕</button>' +
+        '</div>';
+      document.body.appendChild(snackbar);
+      requestAnimationFrame(function() {
+        snackbar.classList.add('show');
+      });
+
+      window._undoTimeout = setTimeout(function() {
+        window.closeUndoSnackbar();
+      }, 6000);
+    };
+
+    window.closeUndoSnackbar = function() {
+      var snackbar = document.getElementById('undoSnackbar');
+      if (snackbar) {
+        snackbar.classList.remove('show');
+        setTimeout(function() { if (snackbar.parentNode) snackbar.remove(); }, 320);
+      }
+    };
+
+    window.editFromSnackbar = function(id) {
+      window.closeUndoSnackbar();
+      window.openEditExpenseSheet(id);
+    };
+
+    window.undoExpense = function(id) {
+      window.closeUndoSnackbar();
+      var exp = state.expenses.find(function(e) { return String(e.id) === String(id); });
+      if (exp) {
+        state.exp = Math.max(0, state.exp - 35);
+      }
+      window.deleteExpenseItem(id);
+      showParticle('⤺ 已撤銷剛剛的記帳！', window.innerWidth / 2 - 80, window.innerHeight - 130);
+      document.getElementById('petSpeech').textContent = '🌿 剛剛記錯的開銷已為你一鍵撤回囉！';
+    };
+
+    function showParticle(text, x, y) {
+      var el = document.createElement('div');
+      el.className = 'floating-particle';
+      el.textContent = text;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      document.body.appendChild(el);
+      requestAnimationFrame(function() {
+        el.style.top = Math.max(30, y - 65) + 'px';
+        el.style.opacity = '0.08';
+      });
+      setTimeout(function() { el.remove(); }, 460);
+    }
+
+    window.openTodayDetailSheet = function() {
+      triggerHaptic([15]);
+      renderTodaySheetList();
+      document.getElementById('todaySheetBackdrop').classList.add('open');
+    };
+
+    function renderTodaySheetList() {
+      var today = getTodayStr(0);
+      var items = state.expenses.filter(function(e) { return e.date === today; });
+      var container = document.getElementById('todaySheetList');
+      if (items.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:16px; color:var(--ink-muted); font-size:12px;">今天還沒有餵食紀錄喔！</div>';
+        return;
+      }
+      container.innerHTML = items.map(function(item) {
+        var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
+        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="修改此筆">' +
+          '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
+            '<span style="font-size:16px; flex-shrink:0;">' + cat.icon + '</span>' +
+            '<div style="min-width:0;">' +
+              '<div style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
+              '<div style="font-size:10.5px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">' +
+            '<span style="font-size:12.5px; font-weight:900;">$' + item.amount.toLocaleString() + '</span>' +
+            '<button class="close-btn" style="width:24px; height:24px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);" onclick="event.stopPropagation(); window.openEditExpenseSheet(' + item.id + ')" title="修改">✎</button>' +
+            '<button class="close-btn" style="width:24px; height:24px;" onclick="event.stopPropagation(); window.deleteExpenseItem(' + item.id + ')" title="刪除此筆">✕</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+    }
+
+    window.deleteExpenseItem = function(id) {
+      triggerHaptic([20]);
+      if (!Array.isArray(state.deletedIds)) state.deletedIds = [];
+      if (state.deletedIds.indexOf(id) === -1) state.deletedIds.push(id);
+      state.expenses = state.expenses.filter(function(e) { return String(e.id) !== String(id); });
+      saveState();
+      if (sbConfig.connected && sbConfig.url && sbConfig.key) {
+        fetch(sbConfig.url + '/rest/v1/pocket_pet_expenses?id=eq.' + id, {
+          method: 'DELETE',
+          keepalive: true,
+          headers: { 'apikey': sbConfig.key, 'Authorization': 'Bearer ' + sbConfig.key }
+        }).catch(function() {});
+      }
+      renderTodaySheetList();
+      renderAll();
+      if (typeof window.renderHistoryLookup === 'function') {
+        window.renderHistoryLookup();
+      }
+    };
+
+    window.getFirstCatId = function() {
+      return state.categories[0] ? state.categories[0].id : 'lunch';
+    };
+
+    window.openCategoryEditSheet = function(initialMode) {
+      triggerHaptic([15]);
+      var mode = initialMode || 'NEW';
+      window.loadCatIntoEditInputs(mode);
+      document.getElementById('catEditSheetBackdrop').classList.add('open');
+    };
+
+    window.applyNewTemplate = function(idx) {
+      triggerHaptic([12]);
+      var t = NEW_ITEM_TEMPLATES[idx];
+      if (!t) return;
+      document.getElementById('catEditName').value = t.icon + ' ' + t.name;
+      document.getElementById('catEditPrice').value = t.price;
+    };
+
+    window.loadCatIntoEditInputs = function(catId) {
+      state.editingCatId = catId;
+      var isNew = catId === 'NEW';
+      document.getElementById('catModeNewBtn').classList.toggle('active', isNew);
+      document.getElementById('catModeEditBtn').classList.toggle('active', !isNew);
+
+      var chipContainer = document.getElementById('editCatSelectChips');
+      if (isNew) {
+        document.getElementById('catEditSubHint').textContent = '點選常用範本自動帶入，或於下方輸入：';
+        document.getElementById('catSaveBtnLabel').textContent = '💾 確認新增項目';
+        chipContainer.innerHTML = NEW_ITEM_TEMPLATES.map(function(t, i) {
+          return '<button class="sub-pill" onclick="window.applyNewTemplate(' + i + ')">' + t.icon + ' ' + t.name + '</button>';
+        }).join('');
+        document.getElementById('catEditName').value = '🍰 下午茶';
+        document.getElementById('catEditPrice').value = '150';
+      } else {
+        document.getElementById('catEditSubHint').textContent = '選擇要修改預設名稱或金額的快按項目：';
+        document.getElementById('catSaveBtnLabel').textContent = '💾 儲存修改設定';
+        chipContainer.innerHTML = state.categories.map(function(c) {
+          return '<button class="sub-pill ' + (state.editingCatId === c.id ? 'active' : '') + '" onclick="window.loadCatIntoEditInputs(\'' + c.id + '\')">' + c.icon + ' ' + c.name + '</button>';
+        }).join('');
+        var cat = state.categories.find(function(c) { return c.id === catId; });
+        if (cat) {
+          document.getElementById('catEditName').value = cat.icon + ' ' + cat.name;
+          document.getElementById('catEditPrice').value = String(cat.defaultPrice);
+        }
+      }
+    };
+
+    window.saveCategoryFromSheet = function() {
+      triggerHaptic([25]);
+      var raw = document.getElementById('catEditName').value.trim() || '🍰 下午茶';
+      var cleanPrice = String(document.getElementById('catEditPrice').value).replace(/[^0-9]/g, '');
+      var price = Math.max(0, parseInt(cleanPrice, 10) || 100);
+      var parts = raw.split(' ');
+      var icon = parts.length > 1 ? parts[0] : '✨';
+      var name = parts.length > 1 ? parts.slice(1).join(' ') : raw;
+
+      if (state.editingCatId === 'NEW') {
+        state.categories.push({
+          id: 'cat_' + Date.now(),
+          name: name,
+          icon: icon,
+          defaultPrice: price,
+          presets: [Math.max(10, price - 30), price, price + 40]
+        });
+        document.getElementById('petSpeech').textContent = '🎉 已新增快按項目【' + icon + ' ' + name + ' ($' + price + ')】！';
+      } else {
+        var target = state.categories.find(function(c) { return c.id === state.editingCatId; });
+        if (target) {
+          target.name = name;
+          target.icon = icon;
+          target.defaultPrice = price;
+          target.presets = [Math.max(10, price - 30), price, price + 40];
+        }
+      }
+      saveState();
+      window.closeSheet('catEditSheetBackdrop');
+      renderAll();
+    };
+
+    window.advancePetStage = function() {
+      triggerHaptic([30, 45]);
+      if (state.exp < 200) state.exp = 240;
+      else if (state.exp < 450) state.exp = 500;
+      else if (state.exp < 750) state.exp = 800;
+      else if (state.exp < 950) state.exp = 960;
+      else {
+        state.generation += 1;
+        state.exp = 60;
+      }
+      saveState();
+      renderAll();
+      var est = getCurrentEstate();
+      document.getElementById('petSpeech').textContent = '🏡 房產升級為【' + est.houseName + '】！';
+    };
+
+    window.toggleEquipDirect = function(evt, equipId) {
+      evt.stopPropagation();
+      triggerHaptic([20]);
+      var eq = state.fixedEquips.find(function(e) { return e.id === equipId; });
+      if (!eq) return;
+      eq.enabled = !eq.enabled;
+      saveState();
+      renderAll();
+      document.getElementById('petSpeech').textContent = eq.enabled
+        ? '🛋️ 已把【' + eq.gear + '】擺回房間囉！'
+        : '📦 已將【' + eq.gear + '】從房間收起！';
+    };
+
+    function renderHouseAndEquips() {
+      var sp = getCurrentSpecies();
+      var curEst = getCurrentEstate();
+      document.getElementById('estateSectionTitle').textContent = '🏡 ' + sp.name + '房產進度（同物種繁衍）';
+
+      document.getElementById('estateTimeline').innerHTML = ESTATES.map(function(e) {
+        var isCur = e.stage === curEst.stage;
+        return '<div class="list-row" style="border-color:' + (isCur ? 'var(--primary)' : 'var(--border)') + '; background:' + (isCur ? 'var(--primary-light)' : 'var(--bg-soft)') + ';">' +
+          '<div style="display:flex; align-items:center; gap:8px; min-width:0; flex:1;">' +
+            '<span style="font-size:17px; flex-shrink:0;">' + e.houseIcon + '</span>' +
+            '<div style="min-width:0; flex:1;">' +
+              '<div style="font-size:11.5px; font-weight:900;">' + e.agePrefix + ' ➔ ' + e.houseName + '</div>' +
+              '<div style="font-size:10px; color:var(--ink-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + e.desc + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<span style="font-size:10.5px; font-weight:900; color:var(--primary-dark); white-space:nowrap; flex-shrink:0;">' + (isCur ? '目前階段' : (state.exp >= e.maxExp ? '✓' : '')) + '</span>' +
+        '</div>';
+      }).join('');
+
+      var sortedEquips = state.fixedEquips.slice().sort(function(a, b) { return b.price - a.price; });
+      document.getElementById('equipList').innerHTML = sortedEquips.map(function(eq) {
+        var tier = getTierInfo(eq.price);
+        var sprite = FURNITURE_SPRITES[eq.spriteKey] || FURNITURE_SPRITES.plant;
+        var iconChar = sprite.label.split(' ')[0];
+        return '<div class="list-row ' + (eq.enabled ? '' : 'off') + '" onclick="window.openEquipModal(\'' + eq.id + '\')" style="cursor:pointer;">' +
+          '<div style="display:flex; align-items:center; gap:7px; min-width:0; flex:1;">' +
+            '<button class="pill-btn" style="padding:4px 8px; font-size:10px; background:' + (eq.enabled ? 'var(--sage-light)' : '#EEE') + '; border-color:' + (eq.enabled ? 'var(--sage)' : '#CCC') + ';" onclick="window.toggleEquipDirect(event, \'' + eq.id + '\')">' +
+              (eq.enabled ? '✓ 擺放' : '已收起') +
+            '</button>' +
+            '<div style="min-width:0; flex:1;">' +
+              '<div style="display:flex; align-items:center; gap:4px;">' +
+                '<span class="tier-tag tier-' + tier.code + '">' + tier.code + '</span>' +
+                '<span style="font-size:11.5px; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + iconChar + ' ' + eq.gear + '</span>' +
+              '</div>' +
+              '<div style="font-size:10px; color:var(--ink-sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' +
+                eq.name + ' · <strong>$' + eq.price.toLocaleString() + '/月</strong>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          '<span style="font-size:10px; color:var(--ink-muted); font-weight:800; flex-shrink:0;">編輯 ✎</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    window.openEquipModal = function(equipId) {
+      triggerHaptic([15]);
+      state.editingEquipId = equipId;
+      if (equipId) {
+        var eq = state.fixedEquips.find(function(e) { return e.id === equipId; });
+        document.getElementById('equipModalTitle').textContent = '🛋️ 修改「' + eq.name + '」';
+        document.getElementById('equipExpenseName').value = eq.name;
+        document.getElementById('equipExpensePrice').value = String(eq.price);
+        document.getElementById('equipGearName').value = eq.gear;
+        state.selectedSpriteKey = eq.spriteKey || 'plant';
+        document.getElementById('equipDeleteBtn').style.display = 'inline-flex';
+        window.previewEquipTier(eq.price);
+      } else {
+        document.getElementById('equipModalTitle').textContent = '✨ 新增月固定開銷與房間家具';
+        document.getElementById('equipExpenseName').value = '水電瓦斯 (月固定)';
+        document.getElementById('equipExpensePrice').value = '1200';
+        document.getElementById('equipGearName').value = '義式濃縮咖啡機';
+        state.selectedSpriteKey = 'coffee';
+        document.getElementById('equipDeleteBtn').style.display = 'none';
+        window.previewEquipTier(1200);
+      }
+      renderSpritePicker();
+      document.getElementById('equipSheetBackdrop').classList.add('open');
+    };
+
+    function renderSpritePicker() {
+      var grid = document.getElementById('spritePickerGrid');
+      grid.innerHTML = Object.keys(FURNITURE_SPRITES).map(function(key) {
+        var sp = FURNITURE_SPRITES[key];
+        return '<div class="sprite-option ' + (state.selectedSpriteKey === key ? 'active' : '') + '" onclick="window.selectFurnitureSprite(\'' + key + '\')">' +
+          '<svg viewBox="-26 -26 52 48" style="width:28px; height:26px;">' + sp.svg + '</svg>' +
+          '<span>' + sp.label.split(' ')[1] + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    window.selectFurnitureSprite = function(key) {
+      triggerHaptic([12]);
+      state.selectedSpriteKey = key;
+      var gearInput = document.getElementById('equipGearName');
+      if (!state.editingEquipId || !gearInput.value.trim()) {
+        gearInput.value = FURNITURE_SPRITES[key].label.split(' ')[1];
+      }
+      renderSpritePicker();
+    };
+
+    window.previewEquipTier = function(val) {
+      var clean = String(val).replace(/[^0-9]/g, '');
+      var p = parseInt(clean, 10) || 0;
+      var tier = getTierInfo(p);
+      document.getElementById('equipTierPreview').innerHTML = '每月 $' + p.toLocaleString() + ' ➔ <span class="tier-tag tier-' + tier.code + '">' + tier.label + ' (' + tier.buff + ')</span>';
+    };
+
+    window.saveEquipFromModal = function() {
+      triggerHaptic([25]);
+      var name = document.getElementById('equipExpenseName').value.trim() || '新增固定開銷';
+      var cleanPrice = String(document.getElementById('equipExpensePrice').value).replace(/[^0-9]/g, '');
+      var price = Math.max(0, parseInt(cleanPrice, 10) || 0);
+      var gear = document.getElementById('equipGearName').value.trim() || FURNITURE_SPRITES[state.selectedSpriteKey].label.split(' ')[1];
+
+      if (state.editingEquipId) {
+        var eq = state.fixedEquips.find(function(e) { return e.id === state.editingEquipId; });
+        if (eq) {
+          eq.name = name;
+          eq.price = price;
+          eq.gear = gear;
+          eq.spriteKey = state.selectedSpriteKey;
+          eq.enabled = true;
+        }
+      } else {
+        state.fixedEquips.push({
+          id: 'fx_' + Date.now(),
+          name: name,
+          price: price,
+          gear: gear,
+          spriteKey: state.selectedSpriteKey,
+          enabled: true
+        });
+      }
+      saveState();
+      window.closeSheet('equipSheetBackdrop');
+      renderAll();
+      document.getElementById('petSpeech').textContent = '🎉 已將【' + gear + '】擺進上方小房間囉！';
+    };
+
+    window.deleteEquipFromModal = function() {
+      if (!state.editingEquipId) return;
+      triggerHaptic([20]);
+      state.fixedEquips = state.fixedEquips.filter(function(e) { return e.id !== state.editingEquipId; });
+      saveState();
+      window.closeSheet('equipSheetBackdrop');
+      renderAll();
+    };
+
+    window.openReviewSheet = function() {
+      triggerHaptic([15]);
+      state.reviewIndex = 0;
+      syncReviewPrice();
+      renderReviewCard();
+      document.getElementById('reviewSheetBackdrop').classList.add('open');
+    };
+
+    window.setReviewSimMode = function(dayMode) {
+      triggerHaptic([12]);
+      state.reviewDay = dayMode;
+      state.reviewIndex = 0;
+      document.getElementById('revModeYesterday').classList.toggle('active', dayMode === 'yesterday');
+      document.getElementById('revModeToday').classList.toggle('active', dayMode === 'today');
+      syncReviewPrice();
+      renderReviewCard();
+    };
+
+    function syncReviewPrice() {
+      if (state.reviewIndex < REVIEW_CARDS.length) {
+        var c = REVIEW_CARDS[state.reviewIndex];
+        var cat = state.categories.find(function(x) { return x.id === c.catId; }) || state.categories[0];
+        reviewPrice = cat.defaultPrice;
+      }
+    }
+
+    window.adjustReviewVal = function(delta) {
+      triggerHaptic([12]);
+      reviewPrice = Math.max(0, reviewPrice + delta);
+      renderReviewCard();
+    };
+
+    window.confirmReviewStep = function(didSpend, evt) {
+      if (didSpend) {
+        var c = REVIEW_CARDS[state.reviewIndex];
+        var cat = state.categories.find(function(x) { return x.id === c.catId; }) || state.categories[0];
+        var dateStr = state.reviewDay === 'yesterday' ? getTodayStr(-1) : getTodayStr(0);
+        recordExpense(cat.id, cat.icon, cat.name, reviewPrice, (state.reviewDay === 'yesterday' ? '昨日' : '今日') + cat.name, dateStr, evt);
+      } else {
+        triggerHaptic([12]);
+      }
+      state.reviewIndex++;
+      if (state.reviewIndex >= REVIEW_CARDS.length) {
+        document.getElementById('missedAlertBtn').style.display = 'none';
+      } else {
+        syncReviewPrice();
+      }
+      renderReviewCard();
+    };
+
+    function renderReviewCard() {
+      var box = document.getElementById('reviewDeckBox');
+      if (state.reviewIndex >= REVIEW_CARDS.length) {
+        box.innerHTML = '<div style="font-size:28px;">🎉</div>' +
+          '<div style="font-size:14px; font-weight:900;">30 秒回顧完成！</div>' +
+          '<div style="font-size:11px; color:var(--ink-sub);">系統已標記完成，隔天早上不會再跳二次提醒吵你囉！</div>' +
+          '<button class="primary-cta" onclick="window.closeSheet(\'reviewSheetBackdrop\')">完成並關閉</button>';
+        return;
+      }
+      var c = REVIEW_CARDS[state.reviewIndex];
+      var cat = state.categories.find(function(x) { return x.id === c.catId; }) || state.categories[0];
+      var dayText = state.reviewDay === 'yesterday' ? '昨天' : '今天';
+
+      box.innerHTML = '<div style="font-size:11px; font-weight:900; color:var(--primary-dark);">進度 ' + (state.reviewIndex + 1) + ' / ' + REVIEW_CARDS.length + ' (' + dayText + ')</div>' +
+        '<div style="font-size:30px; line-height:1.1;">' + cat.icon + '</div>' +
+        '<div style="font-size:14px; font-weight:900;">' + dayText + c.q + '</div>' +
+        '<div style="display:grid; grid-template-columns:1fr 1.3fr 1fr 1fr; gap:6px; align-items:center; width:100%;">' +
+          '<button class="step-btn" onclick="window.adjustReviewVal(-10)">-10</button>' +
+          '<span style="font-size:19px; font-weight:900; color:var(--primary-dark); text-align:center;">$' + reviewPrice + '</span>' +
+          '<button class="step-btn plus" onclick="window.adjustReviewVal(10)">+10</button>' +
+          '<button class="step-btn plus" onclick="window.adjustReviewVal(50)">+50</button>' +
+        '</div>' +
+        '<div style="display:grid; grid-template-columns:1fr 1.2fr; gap:8px; width:100%; margin-top:2px;">' +
+          '<button class="step-btn" onclick="window.confirmReviewStep(false, event)">👈 沒花跳過</button>' +
+          '<button class="primary-cta" style="padding:9px;" onclick="window.confirmReviewStep(true, event)">👉 記 $' + reviewPrice + '</button>' +
+        '</div>';
+    }
+
+    window.setStatsPeriod = function(p) {
+      triggerHaptic([12]);
+      state.statsPeriod = p;
+      document.getElementById('statBtnMonth').classList.toggle('active', p === 'month');
+      document.getElementById('statBtnWeek').classList.toggle('active', p === 'week');
+      renderStats();
+    };
+
+    function renderStats() {
+      var now = new Date();
+      var cur = [];
+      var prev = [];
+      var daysLimit = state.statsPeriod === 'month' ? 30 : 7;
+
+      state.expenses.forEach(function(e) {
+        var diff = Math.floor((now - new Date(e.date)) / (1000 * 60 * 60 * 24));
+        if (diff <= daysLimit) cur.push(e);
+        else if (diff <= daysLimit * 2) prev.push(e);
+      });
+
+      var curSum = cur.reduce(function(s, e) { return s + e.amount; }, 0);
+      var prevSum = prev.reduce(function(s, e) { return s + e.amount; }, 0);
+      var diffVal = curSum - prevSum;
+      var fixedSum = state.fixedEquips.filter(function(e) { return e.enabled; }).reduce(function(s, e) { return s + e.price; }, 0);
+
+      document.getElementById('statPeriodTitle').textContent = state.statsPeriod === 'month' ? '本月日常變動消費' : '本週近 7 日日常消費';
+      document.getElementById('statFixedNote').textContent = '月固定 $' + fixedSum.toLocaleString();
+      document.getElementById('statTotalAmount').textContent = '$' + curSum.toLocaleString();
+      document.getElementById('statGrandTotalText').textContent = state.statsPeriod === 'month'
+        ? '含月固定總計：$' + (curSum + fixedSum).toLocaleString()
+        : '純日常變動開銷';
+
+      document.getElementById('statDiffPill').textContent = diffVal <= 0
+        ? '🌱 比上期少花 $' + Math.abs(diffVal).toLocaleString()
+        : '🍱 比上期多花 $' + diffVal.toLocaleString();
+      document.getElementById('statCountLabel').textContent = '共 ' + cur.length + ' 筆';
+
+      var catTotals = state.categories.map(function(cat) {
+        var sum = cur.filter(function(e) { return e.catId === cat.id; }).reduce(function(s, e) { return s + e.amount; }, 0);
+        var pct = curSum > 0 ? Math.round((sum / curSum) * 100) : 0;
+        return { id: cat.id, name: cat.name, icon: cat.icon, sum: sum, pct: pct };
+      }).sort(function(a, b) { return b.sum - a.sum; });
+
+      document.getElementById('catBarList').innerHTML = catTotals.map(function(c) {
+        return '<div style="display:flex; flex-direction:column; gap:3px;">' +
+          '<div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:800;">' +
+            '<span>' + c.icon + ' ' + c.name + ' (' + c.pct + '%)</span>' +
+            '<span>$' + c.sum.toLocaleString() + '</span>' +
+          '</div>' +
+          '<div class="cat-bar-track">' +
+            '<div class="exp-fill" style="width:' + c.pct + '%;"></div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      var top3 = cur.slice().sort(function(a, b) { return b.amount - a.amount; }).slice(0, 3);
+      var medals = ['🥇', '🥈', '🥉'];
+      document.getElementById('top3List').innerHTML = top3.map(function(item, i) {
+        var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
+        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="修改此筆">' +
+          '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
+            '<span style="font-size:16px; flex-shrink:0;">' + medals[i] + '</span>' +
+            '<div style="min-width:0;">' +
+              '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
+              '<div style="font-size:10px; color:var(--ink-muted);">' + cat.icon + ' ' + cat.name + ' · ' + item.date + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">' +
+            '<span style="font-size:12.5px; font-weight:900; color:var(--primary-dark);">$' + item.amount.toLocaleString() + '</span>' +
+            '<button class="close-btn" style="width:22px; height:22px; font-size:11px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);" onclick="event.stopPropagation(); window.openEditExpenseSheet(' + item.id + ')" title="修改">✎</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      renderHistoryCatFilters();
+      window.renderHistoryLookup();
+    }
+
+    window.setQuickDateRange = function(mode) {
+      triggerHaptic([10]);
+      ['all', '7d', 'month'].forEach(function(m) {
+        var el = document.getElementById('qrange-' + m);
+        if (el) el.classList.toggle('active', m === mode);
+      });
+      var startInput = document.getElementById('filterStartDate');
+      var endInput = document.getElementById('filterEndDate');
+      if (mode === 'all') {
+        startInput.value = '';
+        endInput.value = '';
+      } else if (mode === '7d') {
+        startInput.value = getTodayStr(-7);
+        endInput.value = getTodayStr(0);
+      } else if (mode === 'month') {
+        startInput.value = getTodayStr(-30);
+        endInput.value = getTodayStr(0);
+      }
+      window.renderHistoryLookup();
+    };
+
+    window.setHistoryCatFilter = function(catId) {
+      triggerHaptic([10]);
+      state.historyCatFilter = catId;
+      renderHistoryCatFilters();
+      window.renderHistoryLookup();
+    };
+
+    function renderHistoryCatFilters() {
+      var row = document.getElementById('historyCatFilterRow');
+      if (!row) return;
+      row.innerHTML = '<button class="sub-pill ' + (state.historyCatFilter === 'all' ? 'active' : '') + '" onclick="window.setHistoryCatFilter(\'all\')">全部分類</button>' +
+        state.categories.map(function(c) {
+          return '<button class="sub-pill ' + (state.historyCatFilter === c.id ? 'active' : '') + '" onclick="window.setHistoryCatFilter(\'' + c.id + '\')">' + c.icon + ' ' + c.name + '</button>';
+        }).join('');
+    }
+
+    window.renderHistoryLookup = function() {
+      var startVal = document.getElementById('filterStartDate').value;
+      var endVal = document.getElementById('filterEndDate').value;
+
+      var filtered = state.expenses.filter(function(item) {
+        if (state.historyCatFilter !== 'all' && item.catId !== state.historyCatFilter) return false;
+        if (startVal && item.date < startVal) return false;
+        if (endVal && item.date > endVal) return false;
+        return true;
+      });
+
+      var sum = filtered.reduce(function(s, e) { return s + e.amount; }, 0);
+      document.getElementById('historyFilteredSum').textContent = '共 ' + filtered.length + ' 筆 · $' + sum.toLocaleString();
+
+      var groups = {};
+      filtered.forEach(function(item) {
+        if (!groups[item.date]) groups[item.date] = [];
+        groups[item.date].push(item);
+      });
+
+      var sortedDates = Object.keys(groups).sort(function(a, b) { return b.localeCompare(a); });
+      var container = document.getElementById('historyTimelineList');
+
+      if (sortedDates.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:14px; color:var(--ink-muted); font-size:11.5px;">此區間尚無符合的消費明細</div>';
+        return;
+      }
+
+      container.innerHTML = sortedDates.map(function(dateStr) {
+        var dayItems = groups[dateStr];
+        var daySum = dayItems.reduce(function(s, e) { return s + e.amount; }, 0);
+        var isToday = dateStr === getTodayStr(0);
+        return '<div style="margin-bottom:9px;">' +
+          '<div style="display:flex; justify-content:space-between; font-size:11px; font-weight:900; color:var(--ink-sub); padding:4px 4px; border-bottom:1.5px dashed var(--border); margin-bottom:5px;">' +
+            '<span>📅 ' + dateStr + (isToday ? ' (今天)' : '') + '</span>' +
+            '<span>小計 $' + daySum.toLocaleString() + '</span>' +
+          '</div>' +
+          '<div class="list-stack">' +
+            dayItems.map(function(item) {
+              var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
+              return '<div class="list-row clickable" style="padding:7px 9px;" onclick="window.openEditExpenseSheet(' + item.id + ')" title="修改此筆">' +
+                '<div style="display:flex; align-items:center; gap:7px; min-width:0;">' +
+                  '<span style="font-size:15px; flex-shrink:0;">' + cat.icon + '</span>' +
+                  '<div style="min-width:0;">' +
+                    '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
+                    '<div style="font-size:10px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
+                  '</div>' +
+                '</div>' +
+                '<div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">' +
+                  '<span style="font-size:12px; font-weight:900;">$' + item.amount.toLocaleString() + '</span>' +
+                  '<button class="close-btn" style="width:22px; height:22px; font-size:11px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);" onclick="event.stopPropagation(); window.openEditExpenseSheet(' + item.id + ')" title="修改">✎</button>' +
+                  '<button class="close-btn" style="width:22px; height:22px; font-size:10px;" onclick="event.stopPropagation(); window.deleteExpenseItem(' + item.id + ')" title="刪除此筆">✕</button>' +
+                '</div>' +
+              '</div>';
+            }).join('') +
+          '</div>' +
+        '</div>';
+      }).join('');
+    };
+
+    window.closeSheet = function(id) {
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+      if (id === 'priceSheetBackdrop') {
+        state.editingExpenseId = null;
+        if (state.returnToTodaySheet) {
+          state.returnToTodaySheet = false;
+          renderTodaySheetList();
+          var todayModal = document.getElementById('todaySheetBackdrop');
+          if (todayModal) todayModal.classList.add('open');
+        }
+      }
+    };
+
+    window.closeSheetOnBackdrop = function(evt, id) {
+      if (evt.target && evt.target.id === id) window.closeSheet(id);
+    };
+
+    window.switchTab = function(tab) {
+      triggerHaptic([10]);
+      ['record', 'house', 'stats'].forEach(function(t) {
+        document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        document.getElementById('nav-' + t).classList.toggle('active', t === tab);
+      });
+      var petStage = document.getElementById('petStageSection');
+      if (petStage) {
+        petStage.style.display = tab === 'stats' ? 'none' : 'flex';
+      }
+      var scrollBody = document.querySelector('.app-scroll-body');
+      if (scrollBody) scrollBody.scrollTop = 0;
+      if (tab === 'house') renderHouseAndEquips();
+      if (tab === 'stats') renderStats();
+    };
+
+    function renderAll() {
+      renderStage();
+      renderCapsules();
+      renderHouseAndEquips();
+      renderStats();
+    }
+
+    loadState();
+    loadSbConfig();
+    renderAll();
+    if (sbConfig.connected) {
+      window.pullFromSupabase(false);
+    }
+  })();
+  </script>
+</body>
+</html>

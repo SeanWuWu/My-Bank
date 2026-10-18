@@ -1327,6 +1327,11 @@
           </div>
 
           <div style="background:var(--bg-soft); padding:9px; border-radius:12px; border:1.5px solid var(--border); margin-bottom:9px; display:flex; flex-direction:column; gap:7px;">
+            <div style="display:flex; align-items:center; gap:6px; background:#FFF; border:1.5px solid var(--border); border-radius:8px; padding:3px 8px;">
+              <span style="font-size:12px;">🔍</span>
+              <input type="text" id="historySearchInput" placeholder="搜尋消費品項或備註..." style="border:none; outline:none; font-size:11.5px; width:100%; background:transparent; font-weight:700; color:var(--ink);" oninput="window.renderHistoryLookup()" />
+              <button style="border:none; background:transparent; font-size:11px; color:var(--ink-muted); cursor:pointer; padding:2px 4px;" onclick="document.getElementById('historySearchInput').value=''; window.renderHistoryLookup();">✕</button>
+            </div>
             <div style="display:flex; align-items:center; gap:5px; font-size:11px; font-weight:800;">
               <span style="flex-shrink:0;">區間：</span>
               <input type="date" class="date-native-input" id="filterStartDate" onchange="window.renderHistoryLookup()" />
@@ -1596,8 +1601,12 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
         </button>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%;">
-          <button class="step-btn" style="padding:6px 4px; font-size:11px;" onclick="window.pullFromSupabase(true)">⬇️ 從雲端載入</button>
-          <button class="step-btn plus" style="padding:6px 4px; font-size:11px;" onclick="window.pushToSupabase(true)">⬆️ 備份至雲端</button>
+          <button class="step-btn" style="padding:6px 4px; font-size:11px;" onclick="window.pullFromSupabase(true)">⬇️ 立即從雲端拉取</button>
+          <button class="step-btn plus" style="padding:6px 4px; font-size:11px;" onclick="window.pushToSupabase(true)">⬆️ 立即備份至雲端</button>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; width:100%; margin-top:2px;">
+          <button class="step-btn" style="padding:6px 4px; font-size:11px;" onclick="window.exportToCsv()">📥 匯出 Excel (CSV)</button>
+          <button class="step-btn" style="padding:6px 4px; font-size:11px;" onclick="window.exportBackupJson()">💾 下載備份 (JSON)</button>
         </div>
       </div>
     </div>
@@ -1911,6 +1920,53 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       return yyyy + '-' + mm + '-' + dd;
     }
 
+    var isInitialSyncPending = true;
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    window.exportToCsv = function() {
+      triggerHaptic([15]);
+      if (!state.expenses || state.expenses.length === 0) {
+        showParticle('⚠️ 目前沒有任何記帳資料可匯出', window.innerWidth / 2 - 90, 200);
+        return;
+      }
+      var headers = ['日期', '時間', '分類', '金額', '備註'];
+      var rows = state.expenses.map(function(e) {
+        var cat = state.categories.find(function(c) { return c.id === e.catId; }) || { name: '其他' };
+        var safeNote = '"' + String(e.note || '').replace(/"/g, '""') + '"';
+        return [e.date, e.ts, cat.name, e.amount, safeNote].join(',');
+      });
+      var csvContent = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'pocket_pet_ledger_' + getTodayStr(0) + '.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showParticle('📥 已成功匯出 CSV 檔案！', window.innerWidth / 2 - 80, 200);
+    };
+
+    window.exportBackupJson = function() {
+      triggerHaptic([15]);
+      var dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(state, null, 2));
+      var link = document.createElement('a');
+      link.href = dataStr;
+      link.download = 'pocket_pet_backup_' + getTodayStr(0) + '.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showParticle('💾 已成功下載 JSON 備份！', window.innerWidth / 2 - 80, 200);
+    };
+
     function seedDemoData() {
       var today = getTodayStr(0);
 
@@ -1920,7 +1976,11 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       state.generation = 1;
       state.selectedExpenseDate = today;
       state.expenses = [];
-      saveState();
+      try {
+        if (window.localStorage) {
+          window.localStorage.setItem('cozy_pet_v7', JSON.stringify(state));
+        }
+      } catch (e) {}
     }
 
     function loadState() {
@@ -1948,7 +2008,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
           window.localStorage.setItem('cozy_pet_v7', JSON.stringify(state));
         }
       } catch (e) {}
-      if (typeof sbConfig !== 'undefined' && sbConfig.connected) {
+      if (!isInitialSyncPending && typeof sbConfig !== 'undefined' && sbConfig && sbConfig.connected) {
         window.pushToSupabase(false);
       }
     }
@@ -2102,7 +2162,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
         body: JSON.stringify(profilePayload)
       }).then(function(res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        var expRows = state.expenses.slice(0, 100).map(function(e) {
+        var expRows = state.expenses.map(function(e) {
           var cat = state.categories.find(function(c) { return c.id === e.catId; }) || { name: '其他' };
           return {
             id: e.id,
@@ -2137,16 +2197,18 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     window.pullFromSupabase = function(manualNotice, callback) {
       if (!sbConfig.connected || !sbConfig.url || !sbConfig.key) {
+        isInitialSyncPending = false;
         if (callback) callback(false);
         return;
       }
+      updateCloudBadgeUI('☁️ 正在載入雲端資料...', false);
       var headers = {
         'apikey': sbConfig.key,
         'Authorization': 'Bearer ' + sbConfig.key
       };
       var tsBust = Date.now();
       var profileUrl = sbConfig.url + '/rest/v1/pocket_pet_profile?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=state_json,updated_at&_t=' + tsBust;
-      var expensesUrl = sbConfig.url + '/rest/v1/pocket_pet_expenses?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=*&order=id.desc&limit=200&_t=' + tsBust;
+      var expensesUrl = sbConfig.url + '/rest/v1/pocket_pet_expenses?user_key=eq.' + encodeURIComponent(sbConfig.userKey) + '&select=*&order=id.desc&limit=5000&_t=' + tsBust;
 
       Promise.all([
         fetch(profileUrl, { method: 'GET', headers: headers, cache: 'no-store' }).then(function(r) {
@@ -2234,7 +2296,13 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
                 window.localStorage.setItem('cozy_pet_v7', JSON.stringify(state));
               }
             } catch (e) {}
+
+            isInitialSyncPending = false;
             renderAll();
+            renderTodaySheetList();
+            if (typeof window.renderHistoryLookup === 'function') {
+              window.renderHistoryLookup();
+            }
             updateCloudBadgeUI('✅ 已從雲端載入最新進度 (' + new Date().toTimeString().slice(0,5) + ')', false);
 
             if (mergedList.length !== prevRemoteCount || !hasProfile) {
@@ -2242,20 +2310,22 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
             }
 
             if (manualNotice) {
-              showParticle('⬇️ 已同步雲端資料！', window.innerWidth / 2 - 70, 200);
-              document.getElementById('petSpeech').textContent = '☁️ 已從 Supabase 載入你最新的記帳與小窩進度！';
+              showParticle('⬇️ 已載入 ' + mergedList.length + ' 筆紀錄！', window.innerWidth / 2 - 75, 200);
+              document.getElementById('petSpeech').textContent = '☁️ 已從 Supabase 載入全部 ' + mergedList.length + ' 筆記帳與房間進度！';
             }
             if (callback) callback(true);
           } else {
-            updateCloudBadgeUI('ℹ️ 雲端尚無紀錄，已將本機進度初始上傳至雲端', false);
+            isInitialSyncPending = false;
+            updateCloudBadgeUI('ℹ️ 雲端尚無紀錄，已就緒', false);
             if (callback) {
               callback(false);
-            } else {
+            } else if (state.expenses.length > 0) {
               window.pushToSupabase(false);
             }
           }
         })
         .catch(function(err) {
+          isInitialSyncPending = false;
           updateCloudBadgeUI('⚠️ 無法連線：請確認步驟 1 的 SQL 已執行且金鑰正確', true);
           if (callback) callback(false);
         });
@@ -2398,6 +2468,11 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       document.getElementById('sheetNoteInput').value = '';
       window.setExpenseDateOffset(offset, offset === 0 ? 'today' : (offset === -1 ? 'yesterday' : 'custom'));
 
+      var dateInput = document.getElementById('sheetDateInput');
+      if (dateInput) {
+        dateInput.max = getTodayStr(0);
+      }
+
       var delBtn = document.getElementById('sheetDeleteExpenseBtn');
       if (delBtn) delBtn.style.display = 'none';
       var pinBtn = document.getElementById('sheetPinDefaultBtn');
@@ -2447,7 +2522,11 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
       document.getElementById('sheetExactInput').value = state.currentAmount;
       document.getElementById('sheetNoteInput').value = exp.note || '';
-      document.getElementById('sheetDateInput').value = state.selectedExpenseDate;
+      var dateInput = document.getElementById('sheetDateInput');
+      if (dateInput) {
+        dateInput.max = getTodayStr(0);
+        dateInput.value = state.selectedExpenseDate;
+      }
 
       var today = getTodayStr(0);
       var yest = getTodayStr(-1);
@@ -2532,8 +2611,15 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     window.onCustomDatePick = function(val) {
       if (!val) return;
-      state.selectedExpenseDate = val;
       var today = getTodayStr(0);
+      if (val > today) {
+        triggerHaptic([30]);
+        showParticle('⚠️ 不能記錄未來的日期喔！', window.innerWidth / 2 - 80, 200);
+        val = today;
+        var dateInput = document.getElementById('sheetDateInput');
+        if (dateInput) dateInput.value = today;
+      }
+      state.selectedExpenseDate = val;
       var yest = getTodayStr(-1);
       var d2 = getTodayStr(-2);
       document.getElementById('dp-today').classList.toggle('active', val === today);
@@ -2599,8 +2685,19 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
     };
 
     window.onExactInput = function(val) {
-      var clean = String(val).replace(/[^0-9]/g, '');
-      state.currentAmount = clean === '' ? 0 : (parseInt(clean, 10) || 0);
+      var strVal = String(val).trim();
+      var amount = 0;
+      if (strVal.indexOf('+') !== -1) {
+        var parts = strVal.split('+');
+        for (var i = 0; i < parts.length; i++) {
+          var p = parts[i].replace(/[^0-9]/g, '');
+          if (p) amount += (parseInt(p, 10) || 0);
+        }
+      } else {
+        var clean = strVal.replace(/[^0-9]/g, '');
+        amount = clean === '' ? 0 : (parseInt(clean, 10) || 0);
+      }
+      state.currentAmount = amount;
       document.getElementById('sheetAmountDisplay').textContent = '$' + state.currentAmount;
       document.getElementById('sheetCtaPrice').textContent = '$' + state.currentAmount;
       var slider = document.getElementById('sheetSlider');
@@ -2629,6 +2726,11 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
     };
 
     window.confirmSheetExpense = function(evt) {
+      if (!state.currentAmount || state.currentAmount <= 0) {
+        triggerHaptic([30, 50]);
+        showParticle('⚠️ 請輸入大於 0 的金額', window.innerWidth / 2 - 80, 200);
+        return;
+      }
       var cat = getActiveSheetCat();
       var noteVal = document.getElementById('sheetNoteInput').value.trim() || cat.name;
       var targetDate = state.selectedExpenseDate || getTodayStr(0);
@@ -2710,7 +2812,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       snackbar.id = 'undoSnackbar';
       snackbar.className = 'undo-snackbar';
       snackbar.innerHTML = 
-        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">' + cat.icon + ' ' + (expenseItem.note || cat.name) + ' <b>$' + expenseItem.amount + '</b></span>' +
+        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">' + cat.icon + ' ' + escapeHtml(expenseItem.note || cat.name) + ' <b>$' + expenseItem.amount + '</b></span>' +
         '<div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">' +
           '<button class="undo-btn-pill" style="padding:3px 8px;" onclick="window.editFromSnackbar(' + expenseItem.id + ')" title="修改">✎</button>' +
           '<button class="undo-btn-ghost" onclick="window.undoExpense(' + expenseItem.id + ')">⤺ 撤銷</button>' +
@@ -2784,7 +2886,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
           '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
             '<span style="font-size:16px; flex-shrink:0;">' + cat.icon + '</span>' +
             '<div style="min-width:0;">' +
-              '<div style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
+              '<div style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(item.note) + '</div>' +
               '<div style="font-size:10.5px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
             '</div>' +
           '</div>' +
@@ -3205,7 +3307,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
           '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
             '<span style="font-size:16px; flex-shrink:0;">' + medals[i] + '</span>' +
             '<div style="min-width:0;">' +
-              '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
+              '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(item.note) + '</div>' +
               '<div style="font-size:10px; color:var(--ink-muted);">' + cat.icon + ' ' + cat.name + ' · ' + item.date + '</div>' +
             '</div>' +
           '</div>' +
@@ -3258,13 +3360,32 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
     }
 
     window.renderHistoryLookup = function() {
-      var startVal = document.getElementById('filterStartDate').value;
-      var endVal = document.getElementById('filterEndDate').value;
+      var startInput = document.getElementById('filterStartDate');
+      var endInput = document.getElementById('filterEndDate');
+      var startVal = startInput ? startInput.value : '';
+      var endVal = endInput ? endInput.value : '';
+
+      if (startVal && endVal && startVal > endVal) {
+        var tmp = startVal;
+        startVal = endVal;
+        endVal = tmp;
+        if (startInput) startInput.value = startVal;
+        if (endInput) endInput.value = endVal;
+      }
+
+      var searchInput = document.getElementById('historySearchInput');
+      var query = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
       var filtered = state.expenses.filter(function(item) {
+        var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { name: '其他' };
         if (state.historyCatFilter !== 'all' && item.catId !== state.historyCatFilter) return false;
         if (startVal && item.date < startVal) return false;
         if (endVal && item.date > endVal) return false;
+        if (query) {
+          var matchNote = (item.note || '').toLowerCase().indexOf(query) !== -1;
+          var matchCat = (cat.name || '').toLowerCase().indexOf(query) !== -1;
+          if (!matchNote && !matchCat) return false;
+        }
         return true;
       });
 
@@ -3301,7 +3422,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
                 '<div style="display:flex; align-items:center; gap:7px; min-width:0;">' +
                   '<span style="font-size:15px; flex-shrink:0;">' + cat.icon + '</span>' +
                   '<div style="min-width:0;">' +
-                    '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
+                    '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escapeHtml(item.note) + '</div>' +
                     '<div style="font-size:10px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
                   '</div>' +
                 '</div>' +
@@ -3363,6 +3484,12 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
     renderAll();
     if (sbConfig.connected) {
       window.pullFromSupabase(false);
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./sw.js').catch(function() {});
+      });
     }
   })();
   </script>
