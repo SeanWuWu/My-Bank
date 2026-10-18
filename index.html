@@ -618,6 +618,10 @@
       display: flex;
     }
 
+    #priceSheetBackdrop {
+      z-index: 300;
+    }
+
     .bottom-sheet {
       width: 100%;
       max-width: 364px;
@@ -1401,7 +1405,7 @@
           <span style="font-size:11.5px; color:var(--ink-sub); font-weight:800;">快滑/按鈕或點金額直接改：</span>
           <div style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="window.focusExactAmount()" title="點擊直接輸入金額">
             <div class="sheet-price-big" id="sheetAmountDisplay">$120</div>
-            <span style="font-size:11px; color:var(--primary-dark); font-weight:900; background:var(--primary-light); border:1px solid #F3C1AC; border-radius:6px; padding:2px 6px;">✎ 改數字</span>
+            <span class="close-btn" style="width:24px; height:24px; font-size:12px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);">✎</span>
           </div>
         </div>
 
@@ -1438,7 +1442,7 @@
             <span id="sheetCtaLabel">🍖 確認餵食記帳</span>
             <span id="sheetCtaPrice">$120</span>
           </button>
-          <button class="step-btn" id="sheetDeleteExpenseBtn" style="display:none; width:auto; padding:0 14px; color:#C0392B; border-color:#E6B0AA; background:#FDEDEC; flex-shrink:0;" onclick="window.deleteEditingExpense()">🗑️ 刪除此筆</button>
+          <button class="step-btn" id="sheetDeleteExpenseBtn" style="display:none; width:auto; padding:0 14px; color:#C0392B; border-color:#E6B0AA; background:#FDEDEC; flex-shrink:0;" onclick="window.deleteEditingExpense()">🗑️ 刪除</button>
         </div>
       </div>
     </div>
@@ -1447,7 +1451,7 @@
     <div class="sheet-backdrop" id="todaySheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'todaySheetBackdrop')">
       <div class="bottom-sheet">
         <div class="sheet-head">
-          <div class="sheet-title">📒 今日已餵食明細（點項目可改金額）</div>
+          <div class="sheet-title">📒 今日已餵食明細</div>
           <button class="close-btn" onclick="window.closeSheet('todaySheetBackdrop')">✕</button>
         </div>
         <div class="list-stack" id="todaySheetList"></div>
@@ -2431,6 +2435,10 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       var exp = state.expenses.find(function(e) { return String(e.id) === String(id); });
       if (!exp) return;
       triggerHaptic([15]);
+      var todayModal = document.getElementById('todaySheetBackdrop');
+      state.returnToTodaySheet = Boolean(todayModal && todayModal.classList.contains('open'));
+      if (todayModal) todayModal.classList.remove('open');
+
       state.editingExpenseId = exp.id;
       state.tempItem = null;
       state.selectedCatId = exp.catId;
@@ -2702,9 +2710,9 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       snackbar.id = 'undoSnackbar';
       snackbar.className = 'undo-snackbar';
       snackbar.innerHTML = 
-        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">' + cat.icon + ' ' + (expenseItem.note || cat.name) + ' <b>$' + expenseItem.amount + '</b></span>' +
+        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">' + cat.icon + ' ' + (expenseItem.note || cat.name) + ' <b>$' + expenseItem.amount + '</b></span>' +
         '<div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">' +
-          '<button class="undo-btn-pill" onclick="window.editFromSnackbar(' + expenseItem.id + ')">✎ 改金額</button>' +
+          '<button class="undo-btn-pill" style="padding:3px 8px;" onclick="window.editFromSnackbar(' + expenseItem.id + ')" title="修改">✎</button>' +
           '<button class="undo-btn-ghost" onclick="window.undoExpense(' + expenseItem.id + ')">⤺ 撤銷</button>' +
           '<button class="undo-btn-ghost" style="padding:4px 6px;" onclick="window.closeUndoSnackbar()">✕</button>' +
         '</div>';
@@ -2772,16 +2780,17 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       }
       container.innerHTML = items.map(function(item) {
         var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
-        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="點擊修改此筆金額與備註">' +
+        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="修改此筆">' +
           '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
             '<span style="font-size:16px; flex-shrink:0;">' + cat.icon + '</span>' +
             '<div style="min-width:0;">' +
               '<div style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
-              '<div style="font-size:10.5px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + ' <span style="color:var(--primary-dark); font-weight:700;">✎ 點擊修改</span></div>' +
+              '<div style="font-size:10.5px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
             '</div>' +
           '</div>' +
-          '<div style="display:flex; align-items:center; gap:7px; flex-shrink:0;">' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">' +
             '<span style="font-size:12.5px; font-weight:900;">$' + item.amount.toLocaleString() + '</span>' +
+            '<button class="close-btn" style="width:24px; height:24px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);" onclick="event.stopPropagation(); window.openEditExpenseSheet(' + item.id + ')" title="修改">✎</button>' +
             '<button class="close-btn" style="width:24px; height:24px;" onclick="event.stopPropagation(); window.deleteExpenseItem(' + item.id + ')" title="刪除此筆">✕</button>' +
           '</div>' +
         '</div>';
@@ -3192,15 +3201,18 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       var medals = ['🥇', '🥈', '🥉'];
       document.getElementById('top3List').innerHTML = top3.map(function(item, i) {
         var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
-        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="點擊修改此筆金額與備註">' +
+        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="修改此筆">' +
           '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
             '<span style="font-size:16px; flex-shrink:0;">' + medals[i] + '</span>' +
             '<div style="min-width:0;">' +
               '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
-              '<div style="font-size:10px; color:var(--ink-muted);">' + cat.icon + ' ' + cat.name + ' · ' + item.date + ' <span style="color:var(--primary-dark); font-weight:700;">✎ 修改</span></div>' +
+              '<div style="font-size:10px; color:var(--ink-muted);">' + cat.icon + ' ' + cat.name + ' · ' + item.date + '</div>' +
             '</div>' +
           '</div>' +
-          '<span style="font-size:12.5px; font-weight:900; color:var(--primary-dark); flex-shrink:0;">$' + item.amount.toLocaleString() + '</span>' +
+          '<div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">' +
+            '<span style="font-size:12.5px; font-weight:900; color:var(--primary-dark);">$' + item.amount.toLocaleString() + '</span>' +
+            '<button class="close-btn" style="width:22px; height:22px; font-size:11px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);" onclick="event.stopPropagation(); window.openEditExpenseSheet(' + item.id + ')" title="修改">✎</button>' +
+          '</div>' +
         '</div>';
       }).join('');
 
@@ -3285,16 +3297,17 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
           '<div class="list-stack">' +
             dayItems.map(function(item) {
               var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
-              return '<div class="list-row clickable" style="padding:7px 9px;" onclick="window.openEditExpenseSheet(' + item.id + ')" title="點擊修改此筆金額與備註">' +
+              return '<div class="list-row clickable" style="padding:7px 9px;" onclick="window.openEditExpenseSheet(' + item.id + ')" title="修改此筆">' +
                 '<div style="display:flex; align-items:center; gap:7px; min-width:0;">' +
                   '<span style="font-size:15px; flex-shrink:0;">' + cat.icon + '</span>' +
                   '<div style="min-width:0;">' +
                     '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
-                    '<div style="font-size:10px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + ' <span style="color:var(--primary-dark); font-weight:700;">✎ 修改</span></div>' +
+                    '<div style="font-size:10px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
                   '</div>' +
                 '</div>' +
-                '<div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">' +
+                '<div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">' +
                   '<span style="font-size:12px; font-weight:900;">$' + item.amount.toLocaleString() + '</span>' +
+                  '<button class="close-btn" style="width:22px; height:22px; font-size:11px; color:var(--primary-dark); border-color:#F3C1AC; background:var(--primary-light);" onclick="event.stopPropagation(); window.openEditExpenseSheet(' + item.id + ')" title="修改">✎</button>' +
                   '<button class="close-btn" style="width:22px; height:22px; font-size:10px;" onclick="event.stopPropagation(); window.deleteExpenseItem(' + item.id + ')" title="刪除此筆">✕</button>' +
                 '</div>' +
               '</div>';
@@ -3309,6 +3322,12 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       if (el) el.classList.remove('open');
       if (id === 'priceSheetBackdrop') {
         state.editingExpenseId = null;
+        if (state.returnToTodaySheet) {
+          state.returnToTodaySheet = false;
+          renderTodaySheetList();
+          var todayModal = document.getElementById('todaySheetBackdrop');
+          if (todayModal) todayModal.classList.add('open');
+        }
       }
     };
 
