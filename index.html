@@ -4,6 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="color-scheme" content="light only" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="記帳小窩" />
+  <link rel="icon" type="image/png" href="icon.png?v=2" />
+  <link rel="shortcut icon" type="image/png" href="icon.png?v=2" />
+  <link rel="apple-touch-icon" href="icon.png?v=2" />
+  <link rel="manifest" href="manifest.json" />
+  <meta property="og:image" content="icon.png" />
   <title>手繪療癒記帳小窩 PocketPet v6</title>
   <style>
     :root {
@@ -824,8 +832,8 @@
 
     .step-row {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 5px;
       width: 100%;
     }
 
@@ -836,12 +844,13 @@
       text-align: center;
       background: var(--bg-soft);
       border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 7px 4px;
-      font-size: 12px;
+      border-radius: 9px;
+      padding: 6px 2px;
+      font-size: 11px;
       font-weight: 900;
       color: var(--ink);
       width: 100%;
+      cursor: pointer;
     }
 
     .step-btn.plus {
@@ -1028,6 +1037,77 @@
       padding: 3px 10px;
       transition: all 0.45s ease-out;
     }
+
+    .list-row.clickable {
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .list-row.clickable:active {
+      background: #F1ECE1;
+      transform: scale(0.99);
+    }
+
+    /* Instant Undo & Quick Edit Floating Snackbar */
+    .undo-snackbar {
+      position: fixed;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
+      left: 50%;
+      transform: translateX(-50%) translateY(40px);
+      background: rgba(45, 38, 33, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #FFF;
+      padding: 7px 12px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      max-width: 92vw;
+    }
+
+    .undo-snackbar.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .undo-btn-pill {
+      background: var(--primary);
+      color: #FFF;
+      border: none;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .undo-btn-pill:active {
+      transform: scale(0.95);
+    }
+
+    .undo-btn-ghost {
+      background: rgba(255,255,255,0.18);
+      color: #FFE5D4;
+      border: none;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .undo-btn-ghost:active {
+      transform: scale(0.95);
+    }
   </style>
 </head>
 <body>
@@ -1168,13 +1248,14 @@
         </div>
 
         <div class="today-strip" onclick="window.openTodayDetailSheet()">
-          <div style="display:flex; align-items:center; gap:6px; font-weight:800; font-size:12px;">
-            <span>📒 今日已餵食明細</span>
-            <span style="font-size:11px; color:var(--ink-muted);" id="todayCountBadge">(2 筆)</span>
+          <div style="display:flex; align-items:center; gap:6px; font-weight:800; font-size:12px; min-width:0;">
+            <span>📒 今日明細</span>
+            <span style="font-size:11px; color:var(--ink-muted);" id="todayCountBadge">(0 筆)</span>
           </div>
-          <div style="display:flex; align-items:center; gap:6px; font-weight:900; font-size:12.5px; color:var(--primary-dark);">
-            <span id="todayTotalText">$185</span>
-            <span style="font-size:10.5px; color:var(--ink-muted);">展開 ▾</span>
+          <div style="display:flex; align-items:center; gap:6px; font-weight:900; font-size:12.5px; color:var(--primary-dark); flex-shrink:0;">
+            <button class="pill-btn accent" id="editLastExpenseBtn" style="display:none; padding:3px 8px; font-size:10px;" onclick="window.editLatestExpense(event)">✏️ 改上筆</button>
+            <span id="todayTotalText">$0</span>
+            <span style="font-size:10.5px; color:var(--ink-muted);">點改/展開 ▾</span>
           </div>
         </div>
       </main>
@@ -1230,14 +1311,14 @@
 
         <div class="hand-card">
           <div class="sec-head">
-            <span class="sec-title">🏆 前三大單筆日常消費排行 (Top 3)</span>
+            <span class="sec-title">🏆 前三大單筆日常消費排行 (點項目可改金額)</span>
           </div>
           <div class="list-stack" id="top3List"></div>
         </div>
 
         <div class="hand-card">
           <div class="sec-head">
-            <span class="sec-title">🔍 歷史消費明細查詢</span>
+            <span class="sec-title">🔍 歷史消費明細查詢 (點任一筆可修改)</span>
             <span style="font-size:11px; font-weight:900; color:var(--primary-dark);" id="historyFilteredSum">共 $0</span>
           </div>
 
@@ -1291,12 +1372,12 @@
       </div>
     </div>
 
-    <!-- DIALOG 1: Price Adjuster + Past Date Selector (100% Centered Text & Inputs) -->
+    <!-- DIALOG 1: Price Adjuster + Past Date Selector + Edit Recorded Expense -->
     <div class="sheet-backdrop" id="priceSheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'priceSheetBackdrop')">
       <div class="bottom-sheet">
         <div class="sheet-head">
           <div class="sheet-title" id="sheetCatTitle">🍱 午餐</div>
-          <button class="pill-btn" style="padding:4px 9px; font-size:10.5px;" onclick="window.pinCurrentAsDefault()">📌 設為預設</button>
+          <button class="pill-btn" id="sheetPinDefaultBtn" style="padding:4px 9px; font-size:10.5px;" onclick="window.pinCurrentAsDefault()">📌 設為預設</button>
           <button class="close-btn" onclick="window.closeSheet('priceSheetBackdrop')">✕</button>
         </div>
 
@@ -1308,7 +1389,7 @@
             <button class="date-pill" id="dp-2days" onclick="window.setExpenseDateOffset(-2, '2days')">前天</button>
           </div>
           <div class="date-bottom-row">
-            <span style="font-size:11px; font-weight:800; color:var(--ink-sub); flex-shrink:0;">指定補記日期：</span>
+            <span style="font-size:11px; font-weight:800; color:var(--ink-sub); flex-shrink:0;">指定記帳日期：</span>
             <input type="date" class="date-native-input" id="sheetDateInput" onchange="window.onCustomDatePick(this.value)" />
           </div>
         </div>
@@ -1316,27 +1397,35 @@
         <!-- 3-Column Wrapped Category Grid -->
         <div class="dialog-chip-grid" id="sheetCatSwitchRow"></div>
 
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:11.5px; color:var(--ink-sub); font-weight:800;">快滑或按鈕調金額：</span>
-          <div class="sheet-price-big" id="sheetAmountDisplay">$120</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="font-size:11.5px; color:var(--ink-sub); font-weight:800;">快滑/按鈕或點金額直接改：</span>
+          <div style="display:flex; align-items:center; gap:5px; cursor:pointer;" onclick="window.focusExactAmount()" title="點擊直接輸入金額">
+            <div class="sheet-price-big" id="sheetAmountDisplay">$120</div>
+            <span style="font-size:11px; color:var(--primary-dark); font-weight:900; background:var(--primary-light); border:1px solid #F3C1AC; border-radius:6px; padding:2px 6px;">✎ 改數字</span>
+          </div>
         </div>
 
         <div class="dialog-chip-grid" id="sheetPresetChips"></div>
 
-        <input type="range" min="0" max="500" step="10" value="120" class="price-slider" id="sheetSlider" oninput="window.onSliderChange(this.value)" />
+        <input type="range" min="0" max="2000" step="10" value="120" class="price-slider" id="sheetSlider" oninput="window.onSliderChange(this.value)" />
 
         <div class="step-row">
+          <button class="step-btn" onclick="window.adjustAmount(-100)">-100</button>
           <button class="step-btn" onclick="window.adjustAmount(-50)">-50</button>
           <button class="step-btn" onclick="window.adjustAmount(-10)">-10</button>
           <button class="step-btn plus" onclick="window.adjustAmount(10)">+10</button>
           <button class="step-btn plus" onclick="window.adjustAmount(50)">+50</button>
+          <button class="step-btn plus" onclick="window.adjustAmount(100)">+100</button>
         </div>
 
         <!-- Symmetrical Labeled Inputs with type="text" inputmode="numeric" for Perfect Centering -->
-        <div class="labeled-input-grid" style="grid-template-columns: 1fr 1.35fr;">
+        <div class="labeled-input-grid" style="grid-template-columns: 1.15fr 1.25fr;">
           <div class="field-group">
-            <span class="field-label">自訂精準金額</span>
-            <input type="text" inputmode="numeric" class="num-field" id="sheetExactInput" placeholder="填個位數" oninput="window.onExactInput(this.value)" />
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+              <span class="field-label" style="width:auto;">自訂精準金額</span>
+              <button style="font-size:10px; font-weight:900; color:var(--primary-dark); background:var(--primary-light); border:1px solid #F3C1AC; border-radius:5px; padding:1px 6px;" onclick="window.clearExactAmount()">⌫ 歸零</button>
+            </div>
+            <input type="text" inputmode="numeric" class="num-field" id="sheetExactInput" placeholder="直接輸入金額" oninput="window.onExactInput(this.value)" />
           </div>
           <div class="field-group">
             <span class="field-label">消費備註 (選填)</span>
@@ -1344,10 +1433,13 @@
           </div>
         </div>
 
-        <button class="primary-cta" onclick="window.confirmSheetExpense(event)">
-          <span id="sheetCtaLabel">🍖 確認餵食記帳</span>
-          <span id="sheetCtaPrice">$120</span>
-        </button>
+        <div style="display:flex; gap:8px; width:100%;">
+          <button class="primary-cta" style="flex:1;" onclick="window.confirmSheetExpense(event)">
+            <span id="sheetCtaLabel">🍖 確認餵食記帳</span>
+            <span id="sheetCtaPrice">$120</span>
+          </button>
+          <button class="step-btn" id="sheetDeleteExpenseBtn" style="display:none; width:auto; padding:0 14px; color:#C0392B; border-color:#E6B0AA; background:#FDEDEC; flex-shrink:0;" onclick="window.deleteEditingExpense()">🗑️ 刪除此筆</button>
+        </div>
       </div>
     </div>
 
@@ -1355,7 +1447,7 @@
     <div class="sheet-backdrop" id="todaySheetBackdrop" onclick="window.closeSheetOnBackdrop(event, 'todaySheetBackdrop')">
       <div class="bottom-sheet">
         <div class="sheet-head">
-          <div class="sheet-title">📒 今日已餵食明細</div>
+          <div class="sheet-title">📒 今日已餵食明細（點項目可改金額）</div>
           <button class="close-btn" onclick="window.closeSheet('todaySheetBackdrop')">✕</button>
         </div>
         <div class="list-stack" id="todaySheetList"></div>
@@ -1781,6 +1873,7 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       historyCatFilter: 'all',
       editingCatId: 'NEW',
       editingEquipId: null,
+      editingExpenseId: null,
       selectedSpriteKey: 'coffee',
       reviewDay: 'yesterday',
       reviewIndex: 0,
@@ -2088,20 +2181,22 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
             function addExpItem(item) {
               if (!item || !item.id) return;
               if (deletedMap[String(item.id)]) return;
-              mergedMap[String(item.id)] = {
+              var key = String(item.id);
+              var itemUpd = Number(item.updatedAt) || (item.updated_at ? new Date(item.updated_at).getTime() : 0) || 0;
+              var existing = mergedMap[key];
+              if (existing && (existing.updatedAt || 0) > itemUpd) return;
+              var amt = Number(item.amount);
+              mergedMap[key] = {
                 id: Number(item.id) || item.id,
                 catId: item.catId || item.cat_id || 'other',
-                amount: Number(item.amount) || 0,
+                amount: !isNaN(amt) ? amt : 0,
                 note: item.note || item.cat_name || '消費',
                 date: item.date || item.expense_date || getTodayStr(0),
-                ts: item.ts || '12:00'
+                ts: item.ts || '12:00',
+                updatedAt: itemUpd
               };
             }
 
-            if (Array.isArray(remoteState.expenses)) {
-              remoteState.expenses.forEach(addExpItem);
-            }
-            localExpenses.forEach(addExpItem);
             remoteExpRows.forEach(function(r) {
               addExpItem({
                 id: r.id,
@@ -2109,9 +2204,14 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
                 amount: r.amount,
                 note: r.note || r.cat_name,
                 date: r.expense_date,
-                ts: r.ts
+                ts: r.ts,
+                updated_at: r.updated_at
               });
             });
+            if (Array.isArray(remoteState.expenses)) {
+              remoteState.expenses.forEach(addExpItem);
+            }
+            localExpenses.forEach(addExpItem);
 
             var mergedList = Object.keys(mergedMap).map(function(idKey) {
               return mergedMap[idKey];
@@ -2284,14 +2384,21 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     window.openPriceSheet = function(catId, defaultDateOffset) {
       triggerHaptic([15]);
+      state.editingExpenseId = null;
       var offset = typeof defaultDateOffset === 'number' ? defaultDateOffset : 0;
       state.tempItem = null;
       state.selectedCatId = catId;
       var cat = state.categories.find(function(c) { return c.id === catId; }) || state.categories[0];
       state.currentAmount = cat.defaultPrice;
-      document.getElementById('sheetExactInput').value = '';
+      document.getElementById('sheetExactInput').value = cat.defaultPrice;
       document.getElementById('sheetNoteInput').value = '';
       window.setExpenseDateOffset(offset, offset === 0 ? 'today' : (offset === -1 ? 'yesterday' : 'custom'));
+
+      var delBtn = document.getElementById('sheetDeleteExpenseBtn');
+      if (delBtn) delBtn.style.display = 'none';
+      var pinBtn = document.getElementById('sheetPinDefaultBtn');
+      if (pinBtn) pinBtn.style.display = 'inline-flex';
+
       renderSheetCatSwitcher();
       updatePriceSheetUI();
       document.getElementById('priceSheetBackdrop').classList.add('open');
@@ -2303,14 +2410,85 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     window.openPriceSheetForTemp = function(icon, name, price) {
       triggerHaptic([15]);
+      state.editingExpenseId = null;
       state.tempItem = { id: 'other', icon: icon, name: name, defaultPrice: price, presets: [Math.max(10, price - 40), price, price + 50] };
       state.currentAmount = price;
-      document.getElementById('sheetExactInput').value = '';
+      document.getElementById('sheetExactInput').value = price;
       document.getElementById('sheetNoteInput').value = name;
       window.setExpenseDateOffset(0, 'today');
+
+      var delBtn = document.getElementById('sheetDeleteExpenseBtn');
+      if (delBtn) delBtn.style.display = 'none';
+      var pinBtn = document.getElementById('sheetPinDefaultBtn');
+      if (pinBtn) pinBtn.style.display = 'none';
+
       renderSheetCatSwitcher();
       updatePriceSheetUI();
       document.getElementById('priceSheetBackdrop').classList.add('open');
+    };
+
+    window.openEditExpenseSheet = function(id) {
+      var exp = state.expenses.find(function(e) { return String(e.id) === String(id); });
+      if (!exp) return;
+      triggerHaptic([15]);
+      state.editingExpenseId = exp.id;
+      state.tempItem = null;
+      state.selectedCatId = exp.catId;
+      state.currentAmount = Number(exp.amount) || 0;
+      state.selectedExpenseDate = exp.date || getTodayStr(0);
+
+      document.getElementById('sheetExactInput').value = state.currentAmount;
+      document.getElementById('sheetNoteInput').value = exp.note || '';
+      document.getElementById('sheetDateInput').value = state.selectedExpenseDate;
+
+      var today = getTodayStr(0);
+      var yest = getTodayStr(-1);
+      var d2 = getTodayStr(-2);
+      var dpToday = document.getElementById('dp-today');
+      var dpYest = document.getElementById('dp-yesterday');
+      var dp2 = document.getElementById('dp-2days');
+      if (dpToday) dpToday.classList.toggle('active', state.selectedExpenseDate === today);
+      if (dpYest) dpYest.classList.toggle('active', state.selectedExpenseDate === yest);
+      if (dp2) dp2.classList.toggle('active', state.selectedExpenseDate === d2);
+
+      var delBtn = document.getElementById('sheetDeleteExpenseBtn');
+      if (delBtn) delBtn.style.display = 'block';
+
+      var pinBtn = document.getElementById('sheetPinDefaultBtn');
+      if (pinBtn) pinBtn.style.display = 'none';
+
+      renderSheetCatSwitcher();
+      updatePriceSheetUI();
+      document.getElementById('priceSheetBackdrop').classList.add('open');
+    };
+
+    window.deleteEditingExpense = function() {
+      if (!state.editingExpenseId) return;
+      var id = state.editingExpenseId;
+      state.editingExpenseId = null;
+      window.closeSheet('priceSheetBackdrop');
+      window.deleteExpenseItem(id);
+      showParticle('🗑️ 已刪除此筆記帳', window.innerWidth / 2 - 70, 200);
+    };
+
+    window.focusExactAmount = function() {
+      triggerHaptic([10]);
+      var inp = document.getElementById('sheetExactInput');
+      if (inp) {
+        inp.focus();
+        inp.select();
+      }
+    };
+
+    window.clearExactAmount = function() {
+      triggerHaptic([15]);
+      state.currentAmount = 0;
+      var inp = document.getElementById('sheetExactInput');
+      if (inp) {
+        inp.value = '';
+        inp.focus();
+      }
+      updatePriceSheetUI();
     };
 
     function renderSheetCatSwitcher() {
@@ -2326,7 +2504,9 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       state.tempItem = null;
       state.selectedCatId = catId;
       var cat = state.categories.find(function(c) { return c.id === catId; });
-      if (cat) state.currentAmount = cat.defaultPrice;
+      if (cat && !state.editingExpenseId) {
+        state.currentAmount = cat.defaultPrice;
+      }
       renderSheetCatSwitcher();
       updatePriceSheetUI();
     };
@@ -2361,17 +2541,33 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     function updatePriceSheetUI() {
       var cat = getActiveSheetCat();
-      document.getElementById('sheetCatTitle').textContent = cat.icon + ' ' + cat.name;
+      var isEditing = Boolean(state.editingExpenseId);
+
+      document.getElementById('sheetCatTitle').textContent = isEditing
+        ? '✏️ 修改明細 · ' + cat.icon + ' ' + cat.name
+        : cat.icon + ' ' + cat.name;
+
       document.getElementById('sheetAmountDisplay').textContent = '$' + state.currentAmount;
       document.getElementById('sheetCtaPrice').textContent = '$' + state.currentAmount;
-      document.getElementById('sheetSlider').value = Math.min(500, Math.max(0, state.currentAmount));
+
+      var slider = document.getElementById('sheetSlider');
+      if (slider) {
+        var sliderMax = Math.max(1000, state.currentAmount > 1000 ? Math.ceil(state.currentAmount / 500) * 500 : 1000);
+        slider.max = sliderMax;
+        slider.value = state.currentAmount;
+      }
+
+      var exactInput = document.getElementById('sheetExactInput');
+      if (exactInput && document.activeElement !== exactInput) {
+        exactInput.value = state.currentAmount > 0 ? state.currentAmount : '';
+      }
 
       var isToday = state.selectedExpenseDate === getTodayStr(0);
-      document.getElementById('sheetCtaLabel').textContent = isToday
-        ? '🍖 確認餵食記帳 (今天)'
-        : '📅 補記至 ' + state.selectedExpenseDate.slice(5);
+      document.getElementById('sheetCtaLabel').textContent = isEditing
+        ? '💾 儲存修改金額'
+        : (isToday ? '🍖 確認餵食記帳 (今天)' : '📅 補記至 ' + state.selectedExpenseDate.slice(5));
 
-      document.getElementById('sheetPresetChips').innerHTML = cat.presets.map(function(p) {
+      document.getElementById('sheetPresetChips').innerHTML = (cat.presets || [50, 100, 150]).map(function(p) {
         return '<button class="sub-pill ' + (state.currentAmount === p ? 'active' : '') + '" onclick="window.setSheetAmount(' + p + ')">$' + p + '</button>';
       }).join('');
     }
@@ -2396,9 +2592,19 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
 
     window.onExactInput = function(val) {
       var clean = String(val).replace(/[^0-9]/g, '');
-      if (clean === '') return;
-      state.currentAmount = Math.max(0, parseInt(clean, 10) || 0);
-      updatePriceSheetUI();
+      state.currentAmount = clean === '' ? 0 : (parseInt(clean, 10) || 0);
+      document.getElementById('sheetAmountDisplay').textContent = '$' + state.currentAmount;
+      document.getElementById('sheetCtaPrice').textContent = '$' + state.currentAmount;
+      var slider = document.getElementById('sheetSlider');
+      if (slider) {
+        var sliderMax = Math.max(1000, state.currentAmount > 1000 ? Math.ceil(state.currentAmount / 500) * 500 : 1000);
+        slider.max = sliderMax;
+        slider.value = state.currentAmount;
+      }
+      var cat = getActiveSheetCat();
+      document.getElementById('sheetPresetChips').innerHTML = (cat.presets || []).map(function(p) {
+        return '<button class="sub-pill ' + (state.currentAmount === p ? 'active' : '') + '" onclick="window.setSheetAmount(' + p + ')">$' + p + '</button>';
+      }).join('');
     };
 
     window.pinCurrentAsDefault = function() {
@@ -2418,6 +2624,28 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       var cat = getActiveSheetCat();
       var noteVal = document.getElementById('sheetNoteInput').value.trim() || cat.name;
       var targetDate = state.selectedExpenseDate || getTodayStr(0);
+
+      if (state.editingExpenseId) {
+        var exp = state.expenses.find(function(e) { return String(e.id) === String(state.editingExpenseId); });
+        if (exp) {
+          exp.catId = cat.id;
+          exp.amount = state.currentAmount;
+          exp.note = noteVal;
+          exp.date = targetDate;
+          saveState();
+          showParticle('✏️ 已更新為 $' + state.currentAmount, window.innerWidth / 2 - 70, 200);
+          document.getElementById('petSpeech').textContent = '✏️ 已成功更新記帳：' + cat.icon + noteVal + ' 為 $' + state.currentAmount + '！';
+          renderAll();
+          renderTodaySheetList();
+          if (typeof window.renderHistoryLookup === 'function') {
+            window.renderHistoryLookup();
+          }
+        }
+        state.editingExpenseId = null;
+        window.closeSheet('priceSheetBackdrop');
+        return;
+      }
+
       window.closeSheet('priceSheetBackdrop');
       recordExpense(cat.id, cat.icon, cat.name, state.currentAmount, noteVal, targetDate, evt);
     };
@@ -2426,14 +2654,15 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       triggerHaptic([30, 40]);
       var now = new Date();
       var ts = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-      state.expenses.unshift({
+      var newExpense = {
         id: Date.now(),
         catId: catId,
         amount: amount,
         note: note,
         date: dateStr,
         ts: ts
-      });
+      };
+      state.expenses.unshift(newExpense);
 
       var sp = getCurrentSpecies();
       state.exp += 35;
@@ -2459,7 +2688,59 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       }
 
       renderAll();
+      window.showUndoSnackbar(newExpense);
     }
+
+    /* Undo & Quick-Edit Snackbar */
+    window.showUndoSnackbar = function(expenseItem) {
+      var existing = document.getElementById('undoSnackbar');
+      if (existing) existing.remove();
+      if (window._undoTimeout) clearTimeout(window._undoTimeout);
+
+      var cat = state.categories.find(function(c) { return c.id === expenseItem.catId; }) || { icon: '✨', name: '消費' };
+      var snackbar = document.createElement('div');
+      snackbar.id = 'undoSnackbar';
+      snackbar.className = 'undo-snackbar';
+      snackbar.innerHTML = 
+        '<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:130px;">' + cat.icon + ' ' + (expenseItem.note || cat.name) + ' <b>$' + expenseItem.amount + '</b></span>' +
+        '<div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">' +
+          '<button class="undo-btn-pill" onclick="window.editFromSnackbar(' + expenseItem.id + ')">✎ 改金額</button>' +
+          '<button class="undo-btn-ghost" onclick="window.undoExpense(' + expenseItem.id + ')">⤺ 撤銷</button>' +
+          '<button class="undo-btn-ghost" style="padding:4px 6px;" onclick="window.closeUndoSnackbar()">✕</button>' +
+        '</div>';
+      document.body.appendChild(snackbar);
+      requestAnimationFrame(function() {
+        snackbar.classList.add('show');
+      });
+
+      window._undoTimeout = setTimeout(function() {
+        window.closeUndoSnackbar();
+      }, 6000);
+    };
+
+    window.closeUndoSnackbar = function() {
+      var snackbar = document.getElementById('undoSnackbar');
+      if (snackbar) {
+        snackbar.classList.remove('show');
+        setTimeout(function() { if (snackbar.parentNode) snackbar.remove(); }, 320);
+      }
+    };
+
+    window.editFromSnackbar = function(id) {
+      window.closeUndoSnackbar();
+      window.openEditExpenseSheet(id);
+    };
+
+    window.undoExpense = function(id) {
+      window.closeUndoSnackbar();
+      var exp = state.expenses.find(function(e) { return String(e.id) === String(id); });
+      if (exp) {
+        state.exp = Math.max(0, state.exp - 35);
+      }
+      window.deleteExpenseItem(id);
+      showParticle('⤺ 已撤銷剛剛的記帳！', window.innerWidth / 2 - 80, window.innerHeight - 130);
+      document.getElementById('petSpeech').textContent = '🌿 剛剛記錯的開銷已為你一鍵撤回囉！';
+    };
 
     function showParticle(text, x, y) {
       var el = document.createElement('div');
@@ -2491,17 +2772,17 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       }
       container.innerHTML = items.map(function(item) {
         var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
-        return '<div class="list-row">' +
+        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="點擊修改此筆金額與備註">' +
           '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
             '<span style="font-size:16px; flex-shrink:0;">' + cat.icon + '</span>' +
             '<div style="min-width:0;">' +
               '<div style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
-              '<div style="font-size:10.5px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
+              '<div style="font-size:10.5px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + ' <span style="color:var(--primary-dark); font-weight:700;">✎ 點擊修改</span></div>' +
             '</div>' +
           '</div>' +
           '<div style="display:flex; align-items:center; gap:7px; flex-shrink:0;">' +
             '<span style="font-size:12.5px; font-weight:900;">$' + item.amount.toLocaleString() + '</span>' +
-            '<button class="close-btn" style="width:24px; height:24px;" onclick="window.deleteExpenseItem(' + item.id + ')">✕</button>' +
+            '<button class="close-btn" style="width:24px; height:24px;" onclick="event.stopPropagation(); window.deleteExpenseItem(' + item.id + ')" title="刪除此筆">✕</button>' +
           '</div>' +
         '</div>';
       }).join('');
@@ -2522,6 +2803,9 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       }
       renderTodaySheetList();
       renderAll();
+      if (typeof window.renderHistoryLookup === 'function') {
+        window.renderHistoryLookup();
+      }
     };
 
     window.getFirstCatId = function() {
@@ -2908,12 +3192,12 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
       var medals = ['🥇', '🥈', '🥉'];
       document.getElementById('top3List').innerHTML = top3.map(function(item, i) {
         var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
-        return '<div class="list-row">' +
+        return '<div class="list-row clickable" onclick="window.openEditExpenseSheet(' + item.id + ')" title="點擊修改此筆金額與備註">' +
           '<div style="display:flex; align-items:center; gap:8px; min-width:0;">' +
             '<span style="font-size:16px; flex-shrink:0;">' + medals[i] + '</span>' +
             '<div style="min-width:0;">' +
               '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
-              '<div style="font-size:10px; color:var(--ink-muted);">' + cat.icon + ' ' + cat.name + ' · ' + item.date + '</div>' +
+              '<div style="font-size:10px; color:var(--ink-muted);">' + cat.icon + ' ' + cat.name + ' · ' + item.date + ' <span style="color:var(--primary-dark); font-weight:700;">✎ 修改</span></div>' +
             '</div>' +
           '</div>' +
           '<span style="font-size:12.5px; font-weight:900; color:var(--primary-dark); flex-shrink:0;">$' + item.amount.toLocaleString() + '</span>' +
@@ -3001,17 +3285,17 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
           '<div class="list-stack">' +
             dayItems.map(function(item) {
               var cat = state.categories.find(function(c) { return c.id === item.catId; }) || { icon: '✨', name: '其他' };
-              return '<div class="list-row" style="padding:7px 9px;">' +
+              return '<div class="list-row clickable" style="padding:7px 9px;" onclick="window.openEditExpenseSheet(' + item.id + ')" title="點擊修改此筆金額與備註">' +
                 '<div style="display:flex; align-items:center; gap:7px; min-width:0;">' +
                   '<span style="font-size:15px; flex-shrink:0;">' + cat.icon + '</span>' +
                   '<div style="min-width:0;">' +
                     '<div style="font-size:11.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + item.note + '</div>' +
-                    '<div style="font-size:10px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + '</div>' +
+                    '<div style="font-size:10px; color:var(--ink-muted);">' + cat.name + ' · ' + item.ts + ' <span style="color:var(--primary-dark); font-weight:700;">✎ 修改</span></div>' +
                   '</div>' +
                 '</div>' +
                 '<div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">' +
                   '<span style="font-size:12px; font-weight:900;">$' + item.amount.toLocaleString() + '</span>' +
-                  '<button class="close-btn" style="width:22px; height:22px; font-size:10px;" onclick="window.deleteExpenseItem(' + item.id + ')">✕</button>' +
+                  '<button class="close-btn" style="width:22px; height:22px; font-size:10px;" onclick="event.stopPropagation(); window.deleteExpenseItem(' + item.id + ')" title="刪除此筆">✕</button>' +
                 '</div>' +
               '</div>';
             }).join('') +
@@ -3021,7 +3305,11 @@ alter table public.pocket_pet_expenses disable row level security;</pre>
     };
 
     window.closeSheet = function(id) {
-      document.getElementById(id).classList.remove('open');
+      var el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+      if (id === 'priceSheetBackdrop') {
+        state.editingExpenseId = null;
+      }
     };
 
     window.closeSheetOnBackdrop = function(evt, id) {

@@ -1,0 +1,16 @@
+{
+  "name": "手繪療癒記帳小窩 PocketPet",
+  "short_name": "記帳小窩",
+  "description": "手繪插畫風 0 秒極速記帳 Web App",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F6F3EB",
+  "theme_color": "#EB7142",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}
